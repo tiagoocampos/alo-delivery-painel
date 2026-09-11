@@ -84,9 +84,9 @@ export function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Ainda não tem uma loja?{" "}
-          <Link to="/register" className="font-medium text-foreground underline underline-offset-4">
-            Cadastre sua loja
-          </Link>
+          <a href="https://alo-delivery-website.vercel.app/#contato" target="_blank" className="font-medium text-foreground underline underline-offset-4">
+            Entre em contato
+          </a>
         </p>
       </div>
     </div>
