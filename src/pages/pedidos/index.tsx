@@ -73,11 +73,11 @@ export function PedidosPage() {
             ))}
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
+          <div className="flex flex-col gap-6 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
             {COLUMNS.map((column) => {
               const columnOrders = orders.filter((order) => order.status === column.status)
               return (
-                <div key={column.status} className="flex w-72 shrink-0 flex-col gap-3 lg:w-auto">
+                <div key={column.status} className="flex flex-col gap-3 sm:w-72 sm:shrink-0 lg:w-auto">
                   <div className="flex items-center justify-between px-1">
                     <p className="text-sm font-semibold text-foreground">{column.title}</p>
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
