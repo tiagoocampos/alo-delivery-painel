@@ -5,6 +5,7 @@ import {
   ListOrdered,
   Menu,
   Package,
+  Palette,
   Tags,
   LogOut,
   Pencil,
@@ -29,16 +30,19 @@ import type { Tenant, User } from "@/types"
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
 
 const NAV_ITEMS = [
-  { to: "/", label: "Painel", icon: LayoutDashboard, end: true },
-  { to: "/pedidos", label: "Pedidos", icon: ListOrdered, end: false },
-  { to: "/categorias", label: "Categorias", icon: Tags, end: false },
-  { to: "/produtos", label: "Produtos", icon: Package, end: false },
+  { to: "/", label: "Painel", icon: LayoutDashboard, end: true, ownerOnly: false },
+  { to: "/pedidos", label: "Pedidos", icon: ListOrdered, end: false, ownerOnly: false },
+  { to: "/categorias", label: "Categorias", icon: Tags, end: false, ownerOnly: false },
+  { to: "/produtos", label: "Produtos", icon: Package, end: false, ownerOnly: false },
+  { to: "/personalizacao", label: "Personalização", icon: Palette, end: false, ownerOnly: true },
 ]
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ user, onNavigate }: { user: User | null; onNavigate?: () => void }) {
+  const owner = isStoreOwner(user)
+  const items = NAV_ITEMS.filter((item) => !item.ownerOnly || owner)
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
@@ -151,7 +155,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2 px-1 pt-1">
             <BrandMark />
           </div>
-          <NavLinks />
+          <NavLinks user={user} />
           <div className="mt-auto flex flex-col gap-3">
             <StoreActions />
             {user && (
@@ -182,7 +186,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <BrandMark />
                 </SheetHeader>
                 <div className="flex flex-col gap-6 px-4 pb-4">
-                  <NavLinks onNavigate={() => setMobileOpen(false)} />
+                  <NavLinks user={user} onNavigate={() => setMobileOpen(false)} />
                   <StoreActions />
                   {user && (
                     <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3">

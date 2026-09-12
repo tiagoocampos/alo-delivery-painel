@@ -17,10 +17,6 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onAdvance, onCancel, updating }: OrderCardProps) {
-  const itemsSummary = order.items
-    .map((item) => `${item.quantity}x ${item.product.name}${item.variant ? ` (${item.variant.name})` : ""}`)
-    .join(", ")
-
   const nextAction: { label: string; status: OrderStatus } | null =
     order.status === "novo"
       ? { label: "Iniciar preparo", status: "preparo" }
@@ -40,7 +36,19 @@ export function OrderCard({ order, onAdvance, onCancel, updating }: OrderCardPro
           <span className="shrink-0 text-xs text-muted-foreground">{formatDate(order.createdAt)}</span>
         </div>
 
-        {itemsSummary && <p className="line-clamp-3 text-sm text-muted-foreground">{itemsSummary}</p>}
+        {order.items.length > 0 && (
+          <div className="flex flex-col gap-1">
+            {order.items.map((item) => (
+              <div key={item.id}>
+                <p className="text-sm text-muted-foreground">
+                  {item.quantity}x {item.product.name}
+                  {item.variant ? ` (${item.variant.name})` : ""}
+                </p>
+                {item.note && <p className="text-xs text-muted-foreground/80">Obs: {item.note}</p>}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>

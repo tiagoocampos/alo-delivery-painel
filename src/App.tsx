@@ -6,6 +6,7 @@ import { DashboardPage } from "@/pages/dashboard"
 import { CategoriasPage } from "@/pages/categorias"
 import { ProdutosPage } from "@/pages/produtos"
 import { PedidosPage } from "@/pages/pedidos"
+import { PersonalizacaoPage } from "@/pages/personalizacao"
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
         element={
           <ProtectedRoute>
             <PedidosPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/personalizacao"
+        element={
+          <ProtectedRoute>
+            <PersonalizacaoPage />
           </ProtectedRoute>
         }
       />

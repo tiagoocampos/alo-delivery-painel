@@ -19,7 +19,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ProductVariants } from "@/components/ProductVariants"
 import { api } from "@/services/api"
 import { showApiError, centsToReais, reaisToCents } from "@/lib/utils-api"
-import type { Category, Product } from "@/types"
+import type { Category, Product, ProductBadge } from "@/types"
+
+const NO_BADGE = "none"
+
+const BADGE_OPTIONS: { value: ProductBadge | typeof NO_BADGE; label: string }[] = [
+  { value: NO_BADGE, label: "Nenhum" },
+  { value: "mais_pedido", label: "Mais pedido" },
+  { value: "promocao", label: "Promoção" },
+  { value: "novo", label: "Novo" },
+]
 
 const productSchema = z.object({
   name: z.string().min(1, "O nome do produto é obrigatório"),
@@ -29,6 +38,7 @@ const productSchema = z.object({
     .min(1, "Informe o preço")
     .regex(/^\d+([.,]\d{1,2})?$/, "Preço inválido (ex: 25,90)"),
   categoryId: z.string().min(1, "Selecione uma categoria"),
+  badge: z.string(),
 })
 
 type ProductValues = z.infer<typeof productSchema>
@@ -66,9 +76,10 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
         description: product.description ?? "",
         basePrice: centsToReais(product.basePrice),
         categoryId: product.categoryId,
+        badge: product.badge ?? NO_BADGE,
       })
     } else {
-      reset({ name: "", description: "", basePrice: "", categoryId: "" })
+      reset({ name: "", description: "", basePrice: "", categoryId: "", badge: NO_BADGE })
     }
   }, [open, product, reset])
 
@@ -83,6 +94,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     if (values.description) formData.append("description", values.description)
     formData.append("basePrice", String(reaisToCents(values.basePrice)))
     formData.append("categoryId", values.categoryId)
+    formData.append("badge", values.badge === NO_BADGE ? "" : values.badge)
     if (file) formData.append("file", file)
 
     try {
@@ -146,6 +158,22 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
               </SelectContent>
             </Select>
             {errors.categoryId && <span className="text-xs text-destructive">{errors.categoryId.message}</span>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Selo</Label>
+            <Select value={watch("badge") || undefined} onValueChange={(value) => setValue("badge", value, { shouldValidate: true })}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um selo" />
+              </SelectTrigger>
+              <SelectContent>
+                {BADGE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-1.5">

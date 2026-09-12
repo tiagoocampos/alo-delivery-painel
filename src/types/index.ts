@@ -8,6 +8,13 @@ export interface User {
   tenantId: string
 }
 
+export interface BusinessHourEntry {
+  dayOfWeek: number // 0 = domingo ... 6 = sábado
+  isClosed: boolean
+  opensAt: string | null // "HH:mm"
+  closesAt: string | null // "HH:mm"
+}
+
 export interface Tenant {
   id: string
   name: string
@@ -15,6 +22,14 @@ export interface Tenant {
   phone: string | null
   deliveryFee: number
   isActive: boolean
+  logoUrl: string | null
+  bannerUrl: string | null
+  faviconUrl: string | null
+  description: string | null
+  address: string | null
+  instagramUrl: string | null
+  minimumOrderValue: number
+  businessHours: BusinessHourEntry[] | null
 }
 
 export interface Category {
@@ -37,6 +52,8 @@ export interface ProductCategorySummary {
   sortOrder: number
 }
 
+export type ProductBadge = "mais_pedido" | "promocao" | "novo"
+
 export interface Product {
   id: string
   tenantId: string
@@ -46,6 +63,7 @@ export interface Product {
   imageUrl: string | null
   basePrice: number
   isActive: boolean
+  badge: ProductBadge | null
   createdAt: string
   updatedAt: string
   category: ProductCategorySummary
