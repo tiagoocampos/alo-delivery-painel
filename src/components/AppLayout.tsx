@@ -1,6 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { NavLink, useNavigate } from "react-router-dom"
-import { LayoutDashboard, ListOrdered, Menu, Package, Tags, LogOut } from "lucide-react"
+import {
+  LayoutDashboard,
+  ListOrdered,
+  Menu,
+  Package,
+  Tags,
+  LogOut,
+  Pencil,
+  Store,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -10,9 +19,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { clearAuth, getStoredUser } from "@/lib/auth"
+import { StoreSettingsSheet } from "@/components/StoreSettingsSheet"
+import { clearAuth, getStoredUser, isStoreOwner } from "@/lib/auth"
+import { getMyTenant } from "@/services/tenant"
+import { showApiError } from "@/lib/utils-api"
 import { cn } from "@/lib/utils"
-import type { User } from "@/types"
+import type { Tenant, User } from "@/types"
+
+const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
 
 const NAV_ITEMS = [
   { to: "/", label: "Painel", icon: LayoutDashboard, end: true },
@@ -34,7 +48,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             cn(
               "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-accent text-accent-foreground"
+                ? "bg-accent text-accent-foreground font-semibold"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )
           }
@@ -44,6 +58,16 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         </NavLink>
       ))}
     </nav>
+  )
+}
+
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <img
+      src="/brand/logo-horizontal.png"
+      alt="Alô Delivery"
+      className={cn("h-7 w-auto object-contain", className)}
+    />
   )
 }
 
@@ -60,26 +84,76 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     setUser(getStoredUser())
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    let active = true
+    getMyTenant()
+      .then((response) => {
+        if (active) setTenant(response.data)
+      })
+      .catch((error) => showApiError(error, "Erro ao carregar dados da loja"))
+    return () => {
+      active = false
+    }
+  }, [user])
 
   function handleLogout() {
     clearAuth()
     navigate("/login", { replace: true })
   }
 
+  const storeUrl = tenant ? `${STOREFRONT_URL}/${tenant.slug}` : null
+
+  function StoreActions() {
+    return (
+      <div className="flex flex-col gap-2">
+        {tenant && isStoreOwner(user) && (
+          <div className="flex items-center justify-between gap-2 rounded-lg bg-muted p-3">
+            <p className="truncate text-sm font-medium text-foreground">{tenant.name}</p>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Editar nome da loja"
+            >
+              <Pencil className="size-3.5" />
+            </Button>
+          </div>
+        )}
+        {storeUrl ? (
+          <Button variant="outline" asChild className="justify-start gap-2">
+            <a href={storeUrl} target="_blank" rel="noreferrer">
+              <Store className="size-4" />
+              Ver minha loja
+            </a>
+          </Button>
+        ) : (
+          <Button variant="outline" className="justify-start gap-2" disabled>
+            <Store className="size-4" />
+            Ver minha loja
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted">
       <div className="flex">
-        <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-6 border-r border-border p-4 md:flex">
-          <div>
-            <p className="font-heading text-lg font-semibold text-foreground">Alô Delivery</p>
-            <p className="text-xs text-muted-foreground">Painel do lojista</p>
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 border-r border-border bg-card p-4 md:flex">
+          <div className="flex items-center gap-2 px-1 pt-1">
+            <BrandMark />
           </div>
           <NavLinks />
           <div className="mt-auto flex flex-col gap-3">
+            <StoreActions />
             {user && (
               <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3">
                 <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
@@ -94,8 +168,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm md:hidden">
-            <p className="font-heading text-base font-semibold text-foreground">Alô Delivery</p>
+          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur-sm md:hidden">
+            <BrandMark className="h-6" />
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -104,10 +178,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent side="left" className="w-64">
                 <SheetHeader>
-                  <SheetTitle>Alô Delivery</SheetTitle>
+                  <SheetTitle className="sr-only">Alô Delivery</SheetTitle>
+                  <BrandMark />
                 </SheetHeader>
                 <div className="flex flex-col gap-6 px-4 pb-4">
                   <NavLinks onNavigate={() => setMobileOpen(false)} />
+                  <StoreActions />
                   {user && (
                     <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3">
                       <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
@@ -126,6 +202,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
         </div>
       </div>
+
+      <StoreSettingsSheet
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        tenant={tenant}
+        onSaved={setTenant}
+      />
     </div>
   )
 }

@@ -8,6 +8,15 @@ export interface User {
   tenantId: string
 }
 
+export interface Tenant {
+  id: string
+  name: string
+  slug: string
+  phone: string | null
+  deliveryFee: number
+  isActive: boolean
+}
+
 export interface Category {
   id: string
   name: string
