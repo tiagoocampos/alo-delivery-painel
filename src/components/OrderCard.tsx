@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Card, CardContent } from "@/components/ui/card"
+import { OrderItemLine } from "@/components/OrderItemLine"
 import { formatDate, formatPrice } from "@/lib/utils-api"
 import type { Order, OrderStatus } from "@/types"
 
@@ -13,10 +14,11 @@ interface OrderCardProps {
   order: Order
   onAdvance: (status: OrderStatus) => void
   onCancel: () => void
+  onOpenDetail: () => void
   updating: boolean
 }
 
-export function OrderCard({ order, onAdvance, onCancel, updating }: OrderCardProps) {
+export function OrderCard({ order, onAdvance, onCancel, onOpenDetail, updating }: OrderCardProps) {
   const nextAction: { label: string; status: OrderStatus } | null =
     order.status === "novo"
       ? { label: "Iniciar preparo", status: "preparo" }
@@ -31,39 +33,35 @@ export function OrderCard({ order, onAdvance, onCancel, updating }: OrderCardPro
   return (
     <Card>
       <CardContent className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-medium text-foreground">{order.customerName}</p>
-          <span className="shrink-0 text-xs text-muted-foreground">{formatDate(order.createdAt)}</span>
-        </div>
-
-        {order.items.length > 0 && (
-          <div className="flex flex-col gap-1">
-            {order.items.map((item) => (
-              <div key={item.id}>
-                <p className="text-sm text-muted-foreground">
-                  {item.quantity}x{" "}
-                  {item.categorySize
-                    ? `${item.categorySize.category.name} - ${item.categorySize.name}`
-                    : (item.product?.name ?? "Item")}
-                  {item.variant ? ` (${item.variant.name})` : ""}
-                </p>
-                {item.flavors.length > 0 && (
-                  <p className="text-xs text-muted-foreground/80">
-                    Sabores: {item.flavors.map((flavor) => flavor.productName).join(", ")}
-                  </p>
-                )}
-                {item.categoryCrust && (
-                  <p className="text-xs text-muted-foreground/80">Borda: {item.categoryCrust.name}</p>
-                )}
-                {item.note && <p className="text-xs text-muted-foreground/80">Obs: {item.note}</p>}
-              </div>
-            ))}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={onOpenDetail}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              onOpenDetail()
+            }
+          }}
+          className="-m-1 flex cursor-pointer flex-col gap-2 rounded-md p-1 outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-medium text-foreground">{order.customerName}</p>
+            <span className="shrink-0 text-xs text-muted-foreground">{formatDate(order.createdAt)}</span>
           </div>
-        )}
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>
-          <span className="font-semibold text-foreground">{formatPrice(order.total)}</span>
+          {order.items.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {order.items.map((item) => (
+                <OrderItemLine key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>
+            <span className="font-semibold text-foreground">{formatPrice(order.total)}</span>
+          </div>
         </div>
 
         {(nextAction || canCancel) && (

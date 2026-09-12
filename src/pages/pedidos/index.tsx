@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { AppLayout } from "@/components/AppLayout"
 import { OrderCard } from "@/components/OrderCard"
+import { OrderDetailSheet } from "@/components/OrderDetailSheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/services/api"
 import { showApiError } from "@/lib/utils-api"
@@ -19,6 +20,10 @@ export function PedidosPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+
+  const detailOrder = orders.find((order) => order.id === detailOrderId) ?? null
 
   async function loadOrders() {
     try {
@@ -97,6 +102,10 @@ export function PedidosPage() {
                           updating={updatingId === order.id}
                           onAdvance={(status) => updateStatus(order, status)}
                           onCancel={() => updateStatus(order, "cancelado")}
+                          onOpenDetail={() => {
+                            setDetailOrderId(order.id)
+                            setDetailOpen(true)
+                          }}
                         />
                       ))
                     )}
@@ -107,6 +116,15 @@ export function PedidosPage() {
           </div>
         )}
       </div>
+
+      <OrderDetailSheet
+        order={detailOrder}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        updating={updatingId === detailOrder?.id}
+        onAdvance={(status) => detailOrder && updateStatus(detailOrder, status)}
+        onCancel={() => detailOrder && updateStatus(detailOrder, "cancelado")}
+      />
     </AppLayout>
   )
 }

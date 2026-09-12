@@ -180,7 +180,6 @@ export function CardapioPage() {
           <Accordion type="multiple" className="rounded-xl border border-border bg-card px-4">
             {categories.map((category) => {
               const categoryProducts = products.filter((p) => p.categoryId === category.id)
-              const hasSizes = category.sizes.length > 0
 
               return (
                 <AccordionItem key={category.id} value={category.id}>
@@ -216,26 +215,26 @@ export function CardapioPage() {
                   </div>
 
                   <AccordionContent className="flex flex-col gap-4">
-                    {hasSizes && (
-                      <>
-                        <div className="rounded-lg border border-border p-3">
-                          <CategorySizes
-                            categoryId={category.id}
-                            sizes={category.sizes}
-                            canManage={owner}
-                            onChanged={loadAll}
-                          />
-                        </div>
-                        <div className="rounded-lg border border-border p-3">
-                          <CategoryCrusts
-                            categoryId={category.id}
-                            crusts={category.crusts}
-                            canManage={owner}
-                            onChanged={loadAll}
-                          />
-                        </div>
-                      </>
-                    )}
+                    {/* Sempre visíveis (não só quando já existe tamanho/borda): é aqui
+                        que o lojista cadastra o primeiro de cada — escondidas atrás de
+                        "existe pelo menos um" elas nunca conseguiriam começar. */}
+                    <div className="rounded-lg border border-border p-3">
+                      <CategorySizes
+                        categoryId={category.id}
+                        sizes={category.sizes}
+                        canManage={owner}
+                        onChanged={loadAll}
+                      />
+                    </div>
+
+                    <div className="rounded-lg border border-border p-3">
+                      <CategoryCrusts
+                        categoryId={category.id}
+                        crusts={category.crusts}
+                        canManage={owner}
+                        onChanged={loadAll}
+                      />
+                    </div>
 
                     {categoryProducts.length === 0 ? (
                       <p className="text-xs text-muted-foreground">Nenhum produto nesta categoria.</p>

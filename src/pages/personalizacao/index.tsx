@@ -240,16 +240,23 @@ export function PersonalizacaoPage() {
   async function onSubmit(values: StoreInfoValues) {
     try {
       setSubmitting(true)
+      // O backend valida instagramUrl com .url() — string vazia não é uma URL
+      // válida nem é tratada como "ausente", então só enviamos o campo quando
+      // há de fato um valor (senão a validação falhava em toda loja sem
+      // Instagram cadastrado, que é a maioria).
+      const normalizedInstagram = normalizeInstagramUrl(values.instagramUrl ?? "")
       const response = await updateMyTenantProfile({
         logo,
         banner,
         favicon,
         description: values.description ?? "",
         address: values.address ?? "",
-        instagramUrl: normalizeInstagramUrl(values.instagramUrl ?? ""),
+        instagramUrl: normalizedInstagram || undefined,
         minimumOrderValue: reaisToCents(values.minimumOrderValue || "0"),
         businessHours: businessHours.map((entry) =>
-          entry.isClosed ? { ...entry, opensAt: null, closesAt: null } : entry
+          entry.isClosed
+            ? { ...entry, opensAt: null, closesAt: null }
+            : { ...entry, opensAt: entry.opensAt || "08:00", closesAt: entry.closesAt || "18:00" }
         ),
       })
       setTenant(response.data)
