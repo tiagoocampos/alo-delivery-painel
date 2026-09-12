@@ -69,28 +69,28 @@ export function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pedidos novos hoje</CardTitle>
                 <ListOrdered className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="text-2xl font-semibold">{newToday.length}</CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Em andamento</CardTitle>
                 <Truck className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="text-2xl font-semibold">{inProgress.length}</CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pedidos hoje</CardTitle>
                 <Package className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="text-2xl font-semibold">{ordersToday.length}</CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento hoje</CardTitle>
                 <Tags className="size-4 text-muted-foreground" />
               </CardHeader>
