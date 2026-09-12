@@ -32,12 +32,27 @@ export interface Tenant {
   businessHours: BusinessHourEntry[] | null
 }
 
+export interface CategorySize {
+  id: string
+  name: string
+  price: number // centavos
+  maxFlavors: number
+}
+
+export interface CategoryCrust {
+  id: string
+  name: string
+  priceDelta: number // centavos
+}
+
 export interface Category {
   id: string
   name: string
   sortOrder: number
   isActive: boolean
   createdAt: string
+  sizes: CategorySize[]
+  crusts: CategoryCrust[]
 }
 
 export interface ProductVariant {
@@ -61,7 +76,7 @@ export interface Product {
   name: string
   description: string | null
   imageUrl: string | null
-  basePrice: number
+  basePrice: number | null
   isActive: boolean
   badge: ProductBadge | null
   createdAt: string
@@ -74,13 +89,25 @@ export type OrderStatus = "novo" | "preparo" | "transporte" | "entregue" | "canc
 
 export type PaymentMethod = "pix_manual" | "na_entrega"
 
+export interface OrderItemFlavor {
+  id: string
+  productId: string
+  productName: string
+}
+
 export interface OrderItem {
   id: string
   quantity: number
   unitPrice: number
   note: string | null
-  product: { id: string; name: string; imageUrl?: string | null }
+  // "Item normal" (produto de categoria sem tamanho): product preenchido.
+  // "Item tamanho+sabores" (produto de categoria com tamanho, ex: pizza):
+  // product é null; categorySize, categoryCrust e flavors é que descrevem o item.
+  product: { id: string; name: string; imageUrl?: string | null } | null
   variant: { id: string; name: string; priceDelta?: number } | null
+  categorySize: { id: string; name: string; price?: number; category: { name: string } } | null
+  categoryCrust: { id: string; name: string; priceDelta?: number } | null
+  flavors: OrderItemFlavor[]
 }
 
 export interface Order {

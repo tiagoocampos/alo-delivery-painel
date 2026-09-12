@@ -4,9 +4,8 @@ import {
   LayoutDashboard,
   ListOrdered,
   Menu,
-  Package,
   Palette,
-  Tags,
+  UtensilsCrossed,
   LogOut,
   Pencil,
   Store,
@@ -32,8 +31,7 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
 const NAV_ITEMS = [
   { to: "/", label: "Painel", icon: LayoutDashboard, end: true, ownerOnly: false },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered, end: false, ownerOnly: false },
-  { to: "/categorias", label: "Categorias", icon: Tags, end: false, ownerOnly: false },
-  { to: "/produtos", label: "Produtos", icon: Package, end: false, ownerOnly: false },
+  { to: "/cardapio", label: "Cardápio", icon: UtensilsCrossed, end: false, ownerOnly: false },
   { to: "/personalizacao", label: "Personalização", icon: Palette, end: false, ownerOnly: true },
 ]
 

@@ -13,7 +13,14 @@ import {
 } from "@/components/ui/alert-dialog"
 
 interface ConfirmDialogProps {
-  trigger: ReactNode
+  // Modo não-controlado (padrão): passe `trigger`, o próprio AlertDialog cuida
+  // de abrir/fechar. Modo controlado: omita `trigger` e passe `open`/`onOpenChange`
+  // — necessário quando quem abre o diálogo é outro overlay (ex: um item de
+  // DropdownMenu), já que compor um AlertDialogTrigger dentro de um DropdownMenuItem
+  // gera conflito de foco entre os dois overlays do Radix.
+  trigger?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   title: string
   description: string
   onConfirm: () => void
@@ -25,6 +32,8 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   trigger,
+  open,
+  onOpenChange,
   title,
   description,
   onConfirm,
@@ -34,8 +43,8 @@ export function ConfirmDialog({
   destructive,
 }: ConfirmDialogProps) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

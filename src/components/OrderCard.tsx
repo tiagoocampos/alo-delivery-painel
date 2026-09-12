@@ -41,9 +41,20 @@ export function OrderCard({ order, onAdvance, onCancel, updating }: OrderCardPro
             {order.items.map((item) => (
               <div key={item.id}>
                 <p className="text-sm text-muted-foreground">
-                  {item.quantity}x {item.product.name}
+                  {item.quantity}x{" "}
+                  {item.categorySize
+                    ? `${item.categorySize.category.name} - ${item.categorySize.name}`
+                    : (item.product?.name ?? "Item")}
                   {item.variant ? ` (${item.variant.name})` : ""}
                 </p>
+                {item.flavors.length > 0 && (
+                  <p className="text-xs text-muted-foreground/80">
+                    Sabores: {item.flavors.map((flavor) => flavor.productName).join(", ")}
+                  </p>
+                )}
+                {item.categoryCrust && (
+                  <p className="text-xs text-muted-foreground/80">Borda: {item.categoryCrust.name}</p>
+                )}
                 {item.note && <p className="text-xs text-muted-foreground/80">Obs: {item.note}</p>}
               </div>
             ))}

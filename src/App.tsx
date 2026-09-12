@@ -3,8 +3,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { LoginPage } from "@/pages/login"
 import { RegisterPage } from "@/pages/register"
 import { DashboardPage } from "@/pages/dashboard"
-import { CategoriasPage } from "@/pages/categorias"
-import { ProdutosPage } from "@/pages/produtos"
+import { CardapioPage } from "@/pages/cardapio"
 import { PedidosPage } from "@/pages/pedidos"
 import { PersonalizacaoPage } from "@/pages/personalizacao"
 
@@ -22,18 +21,10 @@ function App() {
         }
       />
       <Route
-        path="/categorias"
+        path="/cardapio"
         element={
           <ProtectedRoute>
-            <CategoriasPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/produtos"
-        element={
-          <ProtectedRoute>
-            <ProdutosPage />
+            <CardapioPage />
           </ProtectedRoute>
         }
       />

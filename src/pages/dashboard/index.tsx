@@ -107,16 +107,10 @@ export function DashboardPage() {
             Ver pedidos
           </Link>
           <Link
-            to="/produtos"
+            to="/cardapio"
             className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
           >
-            Gerenciar produtos
-          </Link>
-          <Link
-            to="/categorias"
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Gerenciar categorias
+            Gerenciar cardápio
           </Link>
         </div>
       </div>

@@ -80,7 +80,10 @@ export function ProductVariants({ productId, variants, canManage, onChanged }: P
       )}
 
       {canManage && (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2 sm:flex-row sm:items-start">
+        // Nota: propositalmente um <div>, não um <form> — este componente é usado
+        // dentro do <form> de ProductFormSheet, e formulários HTML não podem ser
+        // aninhados (o evento de submit do interno propaga e dispara o externo).
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col gap-1">
             <Input placeholder="Nome (ex: Tamanho G)" {...register("name")} />
             {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
@@ -89,10 +92,17 @@ export function ProductVariants({ productId, variants, canManage, onChanged }: P
             <Input placeholder="+/- preço" {...register("priceDelta")} />
             {errors.priceDelta && <span className="text-xs text-destructive">{errors.priceDelta.message}</span>}
           </div>
-          <Button type="submit" size="icon" variant="outline" disabled={submitting} title="Adicionar variação">
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            disabled={submitting}
+            title="Adicionar variação"
+            onClick={handleSubmit(onSubmit)}
+          >
             <Plus className="size-4" />
           </Button>
-        </form>
+        </div>
       )}
     </div>
   )

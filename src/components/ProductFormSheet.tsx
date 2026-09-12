@@ -35,8 +35,9 @@ const productSchema = z.object({
   description: z.string().optional(),
   basePrice: z
     .string()
-    .min(1, "Informe o preço")
-    .regex(/^\d+([.,]\d{1,2})?$/, "Preço inválido (ex: 25,90)"),
+    .regex(/^\d+([.,]\d{1,2})?$/, "Preço inválido (ex: 25,90)")
+    .optional()
+    .or(z.literal("")),
   categoryId: z.string().min(1, "Selecione uma categoria"),
   badge: z.string(),
 })
@@ -48,10 +49,20 @@ interface ProductFormSheetProps {
   onOpenChange: (open: boolean) => void
   categories: Category[]
   product: Product | null
+  defaultCategoryId?: string
   onSaved: () => void
+  onCreated: (product: Product) => void
 }
 
-export function ProductFormSheet({ open, onOpenChange, categories, product, onSaved }: ProductFormSheetProps) {
+export function ProductFormSheet({
+  open,
+  onOpenChange,
+  categories,
+  product,
+  defaultCategoryId,
+  onSaved,
+  onCreated,
+}: ProductFormSheetProps) {
   const isEdit = Boolean(product)
   const [submitting, setSubmitting] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -62,6 +73,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
     handleSubmit,
     reset,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<ProductValues>({ resolver: zodResolver(productSchema) })
@@ -74,14 +86,19 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
       reset({
         name: product.name,
         description: product.description ?? "",
-        basePrice: centsToReais(product.basePrice),
+        basePrice: product.basePrice === null ? "" : centsToReais(product.basePrice),
         categoryId: product.categoryId,
         badge: product.badge ?? NO_BADGE,
       })
     } else {
-      reset({ name: "", description: "", basePrice: "", categoryId: "", badge: NO_BADGE })
+      reset({ name: "", description: "", basePrice: "", categoryId: defaultCategoryId ?? "", badge: NO_BADGE })
     }
-  }, [open, product, reset])
+  }, [open, product, defaultCategoryId, reset])
+
+  // Categorias com tamanhos cadastrados tratam seus produtos como "sabores":
+  // o preço vem do tamanho escolhido pelo cliente, não do produto em si.
+  const selectedCategory = categories.find((category) => category.id === watch("categoryId"))
+  const categoryHasSizes = Boolean(selectedCategory?.sizes?.length)
 
   async function onSubmit(values: ProductValues) {
     if (!isEdit && !file) {
@@ -89,12 +106,26 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
       return
     }
 
+    if (!categoryHasSizes && !values.basePrice) {
+      setError("basePrice", { type: "manual", message: "Informe o preço" })
+      return
+    }
+
     const formData = new FormData()
     formData.append("name", values.name)
     if (values.description) formData.append("description", values.description)
-    formData.append("basePrice", String(reaisToCents(values.basePrice)))
+    if (!categoryHasSizes && values.basePrice) {
+      formData.append("basePrice", String(reaisToCents(values.basePrice)))
+    }
     formData.append("categoryId", values.categoryId)
-    formData.append("badge", values.badge === NO_BADGE ? "" : values.badge)
+    // O backend valida "badge" como um dos 3 valores, null (de verdade) ou
+    // ausente — nunca string vazia. Como multipart/form-data só transmite
+    // strings, não dá pra representar "null" nesse formato; por isso, quando
+    // não há selo, omitimos o campo (backend simplesmente não altera o valor
+    // atual) em vez de mandar "", que a validação rejeitava sempre.
+    if (values.badge !== NO_BADGE) {
+      formData.append("badge", values.badge)
+    }
     if (file) formData.append("file", file)
 
     try {
@@ -102,12 +133,18 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
       if (isEdit && product) {
         await api.put(`/products/${product.id}`, formData)
         toast.success("Produto atualizado!", { position: "top-center" })
+        onSaved()
+        onOpenChange(false)
       } else {
-        await api.post("/products", formData)
-        toast.success("Produto criado!", { position: "top-center" })
+        const response = await api.post<Product>("/products", formData)
+        toast.success("Produto criado! Agora você pode configurar variações, se precisar.", {
+          position: "top-center",
+        })
+        // Mantém o sheet aberto e muda para modo edição: variações só podem
+        // ser criadas depois que o produto existe (precisam do id).
+        onCreated(response.data)
+        onSaved()
       }
-      onSaved()
-      onOpenChange(false)
     } catch (error) {
       showApiError(error, isEdit ? "Erro ao atualizar produto" : "Erro ao criar produto")
     } finally {
@@ -138,12 +175,6 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="basePrice">Preço (R$)</Label>
-            <Input id="basePrice" placeholder="Ex: 25,90" {...register("basePrice")} />
-            {errors.basePrice && <span className="text-xs text-destructive">{errors.basePrice.message}</span>}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
             <Label>Categoria</Label>
             <Select value={watch("categoryId") || undefined} onValueChange={(value) => setValue("categoryId", value, { shouldValidate: true })}>
               <SelectTrigger className="w-full">
@@ -159,6 +190,19 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             </Select>
             {errors.categoryId && <span className="text-xs text-destructive">{errors.categoryId.message}</span>}
           </div>
+
+          {categoryHasSizes ? (
+            <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+              Esta categoria usa tamanhos com preço próprio — cadastre aqui só o sabor, o preço é definido no
+              tamanho da categoria.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="basePrice">Preço (R$)</Label>
+              <Input id="basePrice" placeholder="Ex: 25,90" {...register("basePrice")} />
+              {errors.basePrice && <span className="text-xs text-destructive">{errors.basePrice.message}</span>}
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label>Selo</Label>
@@ -193,7 +237,7 @@ export function ProductFormSheet({ open, onOpenChange, categories, product, onSa
             {fileError && <span className="text-xs text-destructive">{fileError}</span>}
           </div>
 
-          {isEdit && product && (
+          {isEdit && product && !categoryHasSizes && (
             <div className="border-t border-border pt-4">
               <ProductVariants
                 productId={product.id}
