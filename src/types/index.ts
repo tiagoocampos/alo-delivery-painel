@@ -142,3 +142,32 @@ export interface UpdateOrderStatusResult {
   updatedAt: string
   loyalty?: LoyaltyUpdate
 }
+
+export interface OrdersSummary {
+  totalOrders: number
+  totalRevenue: number
+  averageTicket: number
+  totalOrdersIncludingCancelled: number
+}
+
+export interface DashboardMonthSummary {
+  totalRevenue: number
+  totalOrders: number
+}
+
+export interface DashboardSummary {
+  currentMonth: DashboardMonthSummary
+  previousMonth: DashboardMonthSummary
+}
+
+export interface DashboardRevenuePoint {
+  date: string // "YYYY-MM-DD"
+  totalRevenue: number
+  totalOrders: number
+}
+
+export interface DashboardTopProduct {
+  productId: string
+  productName: string
+  totalQuantity: number
+}
