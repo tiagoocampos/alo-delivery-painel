@@ -8,8 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api } from "@/services/api"
+import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice, getTodayDateOnly } from "@/lib/utils-api"
-import type { Order, OrdersSummary, OrderStatus, UpdateOrderStatusResult } from "@/types"
+import { isStoreOpenNow } from "@/lib/businessHours"
+import type { BusinessHourEntry, Order, OrdersSummary, OrderStatus, UpdateOrderStatusResult } from "@/types"
+
+const POLL_INTERVAL_MS = 15_000
+const STORE_OPEN_CHECK_INTERVAL_MS = 60_000
 
 const COLUMNS: { status: OrderStatus; title: string }[] = [
   { status: "novo", title: "Novo" },
@@ -28,11 +33,14 @@ export function PedidosPage() {
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
+  const [businessHours, setBusinessHours] = useState<BusinessHourEntry[] | null>(null)
+  const [storeOpen, setStoreOpen] = useState(true)
+
   const detailOrder = orders.find((order) => order.id === detailOrderId) ?? null
 
-  async function loadOrders(forDate: string) {
+  async function loadOrders(forDate: string, options?: { silent?: boolean }) {
     try {
-      setLoading(true)
+      if (!options?.silent) setLoading(true)
       const [ordersRes, summaryRes] = await Promise.all([
         api.get<Order[]>("/orders", { params: { date: forDate } }),
         api.get<OrdersSummary>("/orders/summary", { params: { date: forDate } }),
@@ -40,15 +48,50 @@ export function PedidosPage() {
       setOrders(ordersRes.data)
       setSummary(summaryRes.data)
     } catch (error) {
-      showApiError(error, "Erro ao carregar pedidos")
+      // Falhas na atualização automática em segundo plano não geram toast —
+      // repetir o erro a cada 15s seria muito incômodo. Erros no carregamento
+      // inicial (ou ao trocar de data) continuam avisando normalmente.
+      if (options?.silent) {
+        console.error(error)
+      } else {
+        showApiError(error, "Erro ao carregar pedidos")
+      }
     } finally {
-      setLoading(false)
+      if (!options?.silent) setLoading(false)
     }
   }
 
   useEffect(() => {
     loadOrders(date)
   }, [date])
+
+  // Busca o horário de funcionamento uma vez — usado só para decidir se o
+  // polling automático deve estar ligado ou desligado.
+  useEffect(() => {
+    getMyTenant()
+      .then((response) => setBusinessHours(response.data.businessHours))
+      .catch((error) => showApiError(error, "Erro ao carregar horário de funcionamento"))
+  }, [])
+
+  // Vigia: reavalia a cada minuto se a loja está aberta agora, ligando/desligando
+  // o polling sozinho nos horários de abertura/fechamento, sem precisar recarregar.
+  useEffect(() => {
+    const check = () => setStoreOpen(isStoreOpenNow(businessHours))
+    check()
+    const watcher = setInterval(check, STORE_OPEN_CHECK_INTERVAL_MS)
+    return () => clearInterval(watcher)
+  }, [businessHours])
+
+  // Polling: só ativo enquanto a loja estiver marcada como aberta.
+  useEffect(() => {
+    if (!storeOpen) return
+
+    const poll = setInterval(() => {
+      loadOrders(date, { silent: true })
+    }, POLL_INTERVAL_MS)
+
+    return () => clearInterval(poll)
+  }, [storeOpen, date])
 
   async function updateStatus(order: Order, status: OrderStatus) {
     try {
@@ -91,6 +134,12 @@ export function PedidosPage() {
             />
           </div>
         </div>
+
+        {!storeOpen && (
+          <p className="rounded-lg border border-dashed border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
+            Loja fechada no momento — atualização automática pausada.
+          </p>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
