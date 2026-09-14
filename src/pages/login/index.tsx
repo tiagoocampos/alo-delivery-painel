@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -76,6 +76,12 @@ export function LoginPage() {
             <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" placeholder="Sua senha" {...register("password")} />
             {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+            <Link
+              to="/esqueci-senha"
+              className="self-end text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
+              Esqueci minha senha
+            </Link>
           </div>
 
           <Button type="submit" size="lg" disabled={loading} className="mt-2 w-full">
