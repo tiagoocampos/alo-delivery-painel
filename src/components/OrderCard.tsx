@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { OrderItemLine } from "@/components/OrderItemLine"
 import { formatDate, formatPrice } from "@/lib/utils-api"
+import { canCancelOrder, getNextOrderAction } from "@/lib/orderStatus"
 import type { Order, OrderStatus } from "@/types"
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -19,16 +21,9 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onAdvance, onCancel, onOpenDetail, updating }: OrderCardProps) {
-  const nextAction: { label: string; status: OrderStatus } | null =
-    order.status === "novo"
-      ? { label: "Iniciar preparo", status: "preparo" }
-      : order.status === "preparo"
-        ? { label: "Saiu para entrega", status: "transporte" }
-        : order.status === "transporte"
-          ? { label: "Marcar como entregue", status: "entregue" }
-          : null
-
-  const canCancel = order.status === "novo" || order.status === "preparo" || order.status === "transporte"
+  const nextAction = getNextOrderAction(order.status)
+  const canCancel = canCancelOrder(order.status)
+  const canceledByCustomer = order.status === "cancelado" && order.canceledBy === "customer"
 
   return (
     <Card>
@@ -62,6 +57,19 @@ export function OrderCard({ order, onAdvance, onCancel, onOpenDetail, updating }
             <span className="text-muted-foreground">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</span>
             <span className="font-semibold text-foreground">{formatPrice(order.total)}</span>
           </div>
+
+          {canceledByCustomer && (
+            <div className="flex flex-col gap-1 rounded-md border border-dashed border-destructive/30 bg-destructive/5 px-2 py-1.5">
+              <Badge variant="destructive" className="w-fit">
+                Cancelado pelo cliente
+              </Badge>
+              {order.cancelReason && (
+                <p className="truncate text-xs text-muted-foreground" title={order.cancelReason}>
+                  Motivo: {order.cancelReason}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {(nextAction || canCancel) && (

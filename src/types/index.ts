@@ -1,7 +1,5 @@
 export type UserRole = "store_owner" | "store_staff"
 
-//types
-
 export interface User {
   id: string
   name: string
@@ -112,6 +110,8 @@ export interface OrderItem {
   flavors: OrderItemFlavor[]
 }
 
+export type CanceledBy = "customer" | "store"
+
 export interface Order {
   id: string
   customerName: string
@@ -125,6 +125,8 @@ export interface Order {
   createdAt: string
   updatedAt?: string
   items: OrderItem[]
+  cancelReason: string | null
+  canceledBy: CanceledBy | null
 }
 
 export interface LoyaltyUpdate {

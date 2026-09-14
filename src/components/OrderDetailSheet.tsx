@@ -5,20 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { OrderItemLine } from "@/components/OrderItemLine"
+import { OrderStatusBadge } from "@/components/OrderStatusBadge"
 import { formatDate, formatPrice } from "@/lib/utils-api"
+import { canCancelOrder, getNextOrderAction } from "@/lib/orderStatus"
 import type { Order, OrderStatus } from "@/types"
 
 const PAYMENT_LABELS: Record<string, string> = {
   pix_manual: "Pix",
   na_entrega: "Na entrega",
-}
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  novo: "Novo",
-  preparo: "Em preparo",
-  transporte: "Em transporte",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
 }
 
 interface OrderDetailSheetProps {
@@ -31,19 +25,9 @@ interface OrderDetailSheetProps {
 }
 
 export function OrderDetailSheet({ order, open, onOpenChange, onAdvance, onCancel, updating }: OrderDetailSheetProps) {
-  const nextAction: { label: string; status: OrderStatus } | null = !order
-    ? null
-    : order.status === "novo"
-      ? { label: "Iniciar preparo", status: "preparo" }
-      : order.status === "preparo"
-        ? { label: "Saiu para entrega", status: "transporte" }
-        : order.status === "transporte"
-          ? { label: "Marcar como entregue", status: "entregue" }
-          : null
-
-  const canCancel = Boolean(
-    order && (order.status === "novo" || order.status === "preparo" || order.status === "transporte")
-  )
+  const nextAction = order ? getNextOrderAction(order.status) : null
+  const canCancel = Boolean(order && canCancelOrder(order.status))
+  const canceledByCustomer = Boolean(order && order.status === "cancelado" && order.canceledBy === "customer")
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -54,11 +38,24 @@ export function OrderDetailSheet({ order, open, onOpenChange, onAdvance, onCance
               <SheetTitle>Pedido de {order.customerName}</SheetTitle>
               <SheetDescription className="flex items-center gap-2">
                 <span>{formatDate(order.createdAt)}</span>
-                <Badge variant="secondary">{STATUS_LABELS[order.status]}</Badge>
+                <OrderStatusBadge status={order.status} />
               </SheetDescription>
             </SheetHeader>
 
             <div className="flex flex-col gap-4 px-4 pb-4">
+              {canceledByCustomer && (
+                <div className="flex flex-col gap-1.5 rounded-md border border-dashed border-destructive/30 bg-destructive/5 px-3 py-2">
+                  <Badge variant="destructive" className="w-fit">
+                    Cancelado pelo cliente
+                  </Badge>
+                  {order.cancelReason && (
+                    <p className="text-sm text-foreground">
+                      <span className="font-medium">Motivo:</span> {order.cancelReason}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-col gap-1">
                 <p className="text-xs font-medium text-muted-foreground">Cliente</p>
                 <p className="text-sm text-foreground">{order.customerName}</p>

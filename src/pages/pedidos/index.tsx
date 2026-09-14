@@ -3,10 +3,12 @@ import { toast } from "sonner"
 import { AppLayout } from "@/components/AppLayout"
 import { OrderCard } from "@/components/OrderCard"
 import { OrderDetailSheet } from "@/components/OrderDetailSheet"
+import { OrdersTable } from "@/components/OrdersTable"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { api } from "@/services/api"
 import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice, getTodayDateOnly } from "@/lib/utils-api"
@@ -15,6 +17,14 @@ import type { BusinessHourEntry, Order, OrdersSummary, OrderStatus, UpdateOrderS
 
 const POLL_INTERVAL_MS = 15_000
 const STORE_OPEN_CHECK_INTERVAL_MS = 60_000
+const VIEW_MODE_STORAGE_KEY = "pedidosViewMode"
+
+type ViewMode = "board" | "table"
+
+function getStoredViewMode(): ViewMode {
+  const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY)
+  return stored === "table" ? "table" : "board"
+}
 
 const COLUMNS: { status: OrderStatus; title: string }[] = [
   { status: "novo", title: "Novo" },
@@ -32,6 +42,7 @@ export function PedidosPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode)
 
   const [businessHours, setBusinessHours] = useState<BusinessHourEntry[] | null>(null)
   const [storeOpen, setStoreOpen] = useState(true)
@@ -64,6 +75,10 @@ export function PedidosPage() {
   useEffect(() => {
     loadOrders(date)
   }, [date])
+
+  useEffect(() => {
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode)
+  }, [viewMode])
 
   // Busca o horário de funcionamento uma vez — usado só para decidir se o
   // polling automático deve estar ligado ou desligado.
@@ -179,42 +194,64 @@ export function PedidosPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col gap-6 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
-            {COLUMNS.map((column) => {
-              const columnOrders = orders.filter((order) => order.status === column.status)
-              return (
-                <div key={column.status} className="flex flex-col gap-3 sm:w-72 sm:shrink-0 lg:w-auto">
-                  <div className="flex items-center justify-between px-1">
-                    <p className="text-sm font-semibold text-foreground">{column.title}</p>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      {columnOrders.length}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    {columnOrders.length === 0 ? (
-                      <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                        Nenhum pedido
-                      </p>
-                    ) : (
-                      columnOrders.map((order) => (
-                        <OrderCard
-                          key={order.id}
-                          order={order}
-                          updating={updatingId === order.id}
-                          onAdvance={(status) => updateStatus(order, status)}
-                          onCancel={() => updateStatus(order, "cancelado")}
-                          onOpenDetail={() => {
-                            setDetailOrderId(order.id)
-                            setDetailOpen(true)
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+            <TabsList>
+              <TabsTrigger value="board">Quadro</TabsTrigger>
+              <TabsTrigger value="table">Tabela</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="board">
+              <div className="flex flex-col gap-6 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible">
+                {COLUMNS.map((column) => {
+                  const columnOrders = orders.filter((order) => order.status === column.status)
+                  return (
+                    <div key={column.status} className="flex flex-col gap-3 sm:w-72 sm:shrink-0 lg:w-auto">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-sm font-semibold text-foreground">{column.title}</p>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          {columnOrders.length}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        {columnOrders.length === 0 ? (
+                          <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
+                            Nenhum pedido
+                          </p>
+                        ) : (
+                          columnOrders.map((order) => (
+                            <OrderCard
+                              key={order.id}
+                              order={order}
+                              updating={updatingId === order.id}
+                              onAdvance={(status) => updateStatus(order, status)}
+                              onCancel={() => updateStatus(order, "cancelado")}
+                              onOpenDetail={() => {
+                                setDetailOrderId(order.id)
+                                setDetailOpen(true)
+                              }}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="table">
+              <OrdersTable
+                orders={orders}
+                updatingId={updatingId}
+                onAdvance={(order, status) => updateStatus(order, status)}
+                onCancel={(order) => updateStatus(order, "cancelado")}
+                onOpenDetail={(orderId) => {
+                  setDetailOrderId(orderId)
+                  setDetailOpen(true)
+                }}
+              />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
