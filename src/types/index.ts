@@ -1,5 +1,7 @@
 export type UserRole = "store_owner" | "store_staff"
 
+//types
+
 export interface User {
   id: string
   name: string
