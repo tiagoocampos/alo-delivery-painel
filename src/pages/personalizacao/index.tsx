@@ -59,6 +59,7 @@ const storeInfoSchema = z.object({
   description: z.string().optional(),
   address: z.string().optional(),
   instagramUrl: z.string().optional(),
+  pixKey: z.string().optional(),
   minimumOrderValue: z
     .string()
     .optional()
@@ -187,6 +188,7 @@ export function PersonalizacaoPage() {
         description: response.data.description ?? "",
         address: response.data.address ?? "",
         instagramUrl: response.data.instagramUrl ?? "",
+        pixKey: response.data.pixKey ?? "",
         minimumOrderValue: centsToReais(response.data.minimumOrderValue),
       })
       setBusinessHours(normalizeBusinessHours(response.data.businessHours))
@@ -252,6 +254,7 @@ export function PersonalizacaoPage() {
         description: values.description ?? "",
         address: values.address ?? "",
         instagramUrl: normalizedInstagram || undefined,
+        pixKey: values.pixKey ?? "",
         minimumOrderValue: reaisToCents(values.minimumOrderValue || "0"),
         businessHours: businessHours.map((entry) =>
           entry.isClosed
@@ -344,6 +347,14 @@ export function PersonalizacaoPage() {
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="address">Endereço</Label>
                   <Input id="address" placeholder="Rua, número, bairro, cidade" {...register("address")} />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="pixKey">Chave Pix</Label>
+                  <Input id="pixKey" placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" {...register("pixKey")} />
+                  <p className="text-xs text-muted-foreground">
+                    Essa chave aparece para o cliente no checkout quando ele escolher pagar via Pix.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -16,6 +16,7 @@ export interface UpdateTenantProfileInput {
   description?: string
   address?: string
   instagramUrl?: string
+  pixKey?: string
   minimumOrderValue?: number
   businessHours?: BusinessHourEntry[]
 }
@@ -28,6 +29,7 @@ export function updateMyTenantProfile(input: UpdateTenantProfileInput) {
   if (input.description !== undefined) formData.append("description", input.description)
   if (input.address !== undefined) formData.append("address", input.address)
   if (input.instagramUrl !== undefined) formData.append("instagramUrl", input.instagramUrl)
+  if (input.pixKey !== undefined) formData.append("pixKey", input.pixKey)
   if (input.minimumOrderValue !== undefined) formData.append("minimumOrderValue", String(input.minimumOrderValue))
   if (input.businessHours !== undefined) formData.append("businessHours", JSON.stringify(input.businessHours))
   return api.put<Tenant>("/tenant/me", formData)
