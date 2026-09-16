@@ -21,6 +21,7 @@ import { api } from "@/services/api"
 import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice } from "@/lib/utils-api"
 import { getStoredUser, isStoreOwner } from "@/lib/auth"
+import { isPizzaCategoryName } from "@/lib/pizzaCategory"
 import type { Category, CategoryCrust, CategorySize, Product, ProductBadge } from "@/types"
 
 const PRODUCT_BADGE_LABELS: Record<ProductBadge, string> = {
@@ -180,6 +181,7 @@ export function CardapioPage() {
           <Accordion type="multiple" className="rounded-xl border border-border bg-card px-4">
             {categories.map((category) => {
               const categoryProducts = products.filter((p) => p.categoryId === category.id)
+              const isPizza = isPizzaCategoryName(category.name)
 
               return (
                 <AccordionItem key={category.id} value={category.id}>
@@ -215,26 +217,34 @@ export function CardapioPage() {
                   </div>
 
                   <AccordionContent className="flex flex-col gap-4">
-                    {/* Sempre visíveis (não só quando já existe tamanho/borda): é aqui
-                        que o lojista cadastra o primeiro de cada — escondidas atrás de
-                        "existe pelo menos um" elas nunca conseguiriam começar. */}
-                    <div className="rounded-lg border border-border p-3">
-                      <CategorySizes
-                        categoryId={category.id}
-                        sizes={category.sizes}
-                        canManage={owner}
-                        onChanged={loadAll}
-                      />
-                    </div>
+                    {/* Tamanhos/bordas são o sistema pensado pra pizza. Categorias
+                        reconhecidas pelo nome (ver isPizzaCategoryName) sempre mostram
+                        a seção, mesmo vazia, pra poder cadastrar o primeiro tamanho/borda.
+                        Categorias não reconhecidas só mostram a seção se já tiver dado
+                        cadastrado de antes dessa restrição — sem opção de adicionar novo. */}
+                    {(isPizza || category.sizes.length > 0) && (
+                      <div className="rounded-lg border border-border p-3">
+                        <CategorySizes
+                          categoryId={category.id}
+                          sizes={category.sizes}
+                          canManage={owner}
+                          canAdd={owner && isPizza}
+                          onChanged={loadAll}
+                        />
+                      </div>
+                    )}
 
-                    <div className="rounded-lg border border-border p-3">
-                      <CategoryCrusts
-                        categoryId={category.id}
-                        crusts={category.crusts}
-                        canManage={owner}
-                        onChanged={loadAll}
-                      />
-                    </div>
+                    {(isPizza || category.crusts.length > 0) && (
+                      <div className="rounded-lg border border-border p-3">
+                        <CategoryCrusts
+                          categoryId={category.id}
+                          crusts={category.crusts}
+                          canManage={owner}
+                          canAdd={owner && isPizza}
+                          onChanged={loadAll}
+                        />
+                      </div>
+                    )}
 
                     {categoryProducts.length === 0 ? (
                       <p className="text-xs text-muted-foreground">Nenhum produto nesta categoria.</p>

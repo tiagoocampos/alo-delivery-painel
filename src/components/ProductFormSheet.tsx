@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ProductVariants } from "@/components/ProductVariants"
+import { ProductExtras } from "@/components/ProductExtras"
 import { api } from "@/services/api"
 import { showApiError, centsToReais, reaisToCents } from "@/lib/utils-api"
 import type { Category, Product, ProductBadge } from "@/types"
@@ -242,6 +243,17 @@ export function ProductFormSheet({
               <ProductVariants
                 productId={product.id}
                 variants={product.variants}
+                canManage
+                onChanged={onSaved}
+              />
+            </div>
+          )}
+
+          {isEdit && product && !categoryHasSizes && (
+            <div className="border-t border-border pt-4">
+              <ProductExtras
+                productId={product.id}
+                extras={product.extras}
                 canManage
                 onChanged={onSaved}
               />

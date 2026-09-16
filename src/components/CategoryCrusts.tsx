@@ -145,10 +145,11 @@ interface CategoryCrustsProps {
   categoryId: string
   crusts: CategoryCrust[]
   canManage: boolean
+  canAdd: boolean
   onChanged: () => void
 }
 
-export function CategoryCrusts({ categoryId, crusts: initialCrusts, canManage, onChanged }: CategoryCrustsProps) {
+export function CategoryCrusts({ categoryId, crusts: initialCrusts, canManage, canAdd, onChanged }: CategoryCrustsProps) {
   const [crusts, setCrusts] = useState<CategoryCrust[]>(initialCrusts)
   const [submitting, setSubmitting] = useState(false)
 
@@ -216,7 +217,7 @@ export function CategoryCrusts({ categoryId, crusts: initialCrusts, canManage, o
         </ul>
       )}
 
-      {canManage && (
+      {canAdd && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col gap-1">
             <Input placeholder="Nome (ex: Borda de catupiry)" {...register("name")} />

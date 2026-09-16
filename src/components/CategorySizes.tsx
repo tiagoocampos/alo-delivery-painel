@@ -156,10 +156,11 @@ interface CategorySizesProps {
   categoryId: string
   sizes: CategorySize[]
   canManage: boolean
+  canAdd: boolean
   onChanged: () => void
 }
 
-export function CategorySizes({ categoryId, sizes: initialSizes, canManage, onChanged }: CategorySizesProps) {
+export function CategorySizes({ categoryId, sizes: initialSizes, canManage, canAdd, onChanged }: CategorySizesProps) {
   const [sizes, setSizes] = useState<CategorySize[]>(initialSizes)
   const [submitting, setSubmitting] = useState(false)
 
@@ -229,7 +230,7 @@ export function CategorySizes({ categoryId, sizes: initialSizes, canManage, onCh
         </ul>
       )}
 
-      {canManage && (
+      {canAdd && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <div className="flex flex-1 flex-col gap-1">
             <Input placeholder="Nome (ex: Grande)" {...register("name")} />

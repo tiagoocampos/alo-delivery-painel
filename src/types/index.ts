@@ -62,6 +62,12 @@ export interface ProductVariant {
   priceDelta: number
 }
 
+export interface ProductExtra {
+  id: string
+  name: string
+  price: number // centavos
+}
+
 export interface ProductCategorySummary {
   id: string
   name: string
@@ -84,6 +90,7 @@ export interface Product {
   updatedAt: string
   category: ProductCategorySummary
   variants: ProductVariant[]
+  extras: ProductExtra[]
 }
 
 export type OrderStatus = "novo" | "preparo" | "transporte" | "entregue" | "cancelado"
