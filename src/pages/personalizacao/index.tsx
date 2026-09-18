@@ -5,6 +5,7 @@ import { z } from "zod"
 import { toast } from "sonner"
 import { ImageOff } from "lucide-react"
 import { AppLayout } from "@/components/AppLayout"
+import { PlanoBasicoNotice } from "@/components/PlanoBasicoNotice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,10 +14,11 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getMyTenant, updateMyTenantProfile } from "@/services/tenant"
+import { updateMyTenantProfile } from "@/services/tenant"
 import { showApiError, reaisToCents, centsToReais } from "@/lib/utils-api"
 import { getStoredUser, isStoreOwner } from "@/lib/auth"
-import type { BusinessHourEntry, Tenant } from "@/types"
+import { useTenant } from "@/contexts/TenantContext"
+import type { BusinessHourEntry } from "@/types"
 
 const ACCEPTED_TYPES = "image/jpeg,image/jpg,image/png"
 
@@ -158,8 +160,7 @@ function BusinessHourRow({ label, entry, onChange }: BusinessHourRowProps) {
 
 export function PersonalizacaoPage() {
   const owner = isStoreOwner(getStoredUser())
-  const [tenant, setTenant] = useState<Tenant | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { tenant, loading, setTenant } = useTenant()
   const [submitting, setSubmitting] = useState(false)
 
   const [logo, setLogo] = useState<File | null>(null)
@@ -179,29 +180,17 @@ export function PersonalizacaoPage() {
     formState: { errors },
   } = useForm<StoreInfoValues>({ resolver: zodResolver(storeInfoSchema) })
 
-  async function loadTenant() {
-    try {
-      setLoading(true)
-      const response = await getMyTenant()
-      setTenant(response.data)
-      reset({
-        description: response.data.description ?? "",
-        address: response.data.address ?? "",
-        instagramUrl: response.data.instagramUrl ?? "",
-        pixKey: response.data.pixKey ?? "",
-        minimumOrderValue: centsToReais(response.data.minimumOrderValue),
-      })
-      setBusinessHours(normalizeBusinessHours(response.data.businessHours))
-    } catch (error) {
-      showApiError(error, "Erro ao carregar dados da loja")
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadTenant()
-  }, [])
+    if (!tenant) return
+    reset({
+      description: tenant.description ?? "",
+      address: tenant.address ?? "",
+      instagramUrl: tenant.instagramUrl ?? "",
+      pixKey: tenant.pixKey ?? "",
+      minimumOrderValue: centsToReais(tenant.minimumOrderValue),
+    })
+    setBusinessHours(normalizeBusinessHours(tenant.businessHours))
+  }, [tenant, reset])
 
   useEffect(() => {
     if (!logo) {
@@ -296,37 +285,44 @@ export function PersonalizacaoPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <ImageField
-                title="Logo"
-                helpText="Aparece no cabeçalho do seu cardápio. Prefira uma imagem quadrada."
-                currentUrl={tenant?.logoUrl ?? null}
-                file={logo}
-                previewUrl={logoPreview}
-                onFileChange={setLogo}
-                previewClassName="h-32 w-32 self-center rounded-lg object-cover"
+            {tenant?.effectivePlan === "basico" ? (
+              <PlanoBasicoNotice
+                description="A personalização de logo, banner e favicon está disponível apenas no plano completo. Assine para reativar essa e outras funcionalidades."
+                reassurance="Sua logo e banner continuam salvos e voltam a aparecer assim que você assinar o plano completo."
               />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <ImageField
+                  title="Logo"
+                  helpText="Aparece no cabeçalho do seu cardápio. Prefira uma imagem quadrada."
+                  currentUrl={tenant?.logoUrl ?? null}
+                  file={logo}
+                  previewUrl={logoPreview}
+                  onFileChange={setLogo}
+                  previewClassName="h-32 w-32 self-center rounded-lg object-cover"
+                />
 
-              <ImageField
-                title="Banner"
-                helpText="Aparece no topo do seu cardápio, atrás do nome da loja. Prefira uma imagem larga (formato paisagem)."
-                currentUrl={tenant?.bannerUrl ?? null}
-                file={banner}
-                previewUrl={bannerPreview}
-                onFileChange={setBanner}
-                previewClassName="h-32 w-full rounded-lg object-cover"
-              />
+                <ImageField
+                  title="Banner"
+                  helpText="Aparece no topo do seu cardápio, atrás do nome da loja. Prefira uma imagem larga (formato paisagem)."
+                  currentUrl={tenant?.bannerUrl ?? null}
+                  file={banner}
+                  previewUrl={bannerPreview}
+                  onFileChange={setBanner}
+                  previewClassName="h-32 w-full rounded-lg object-cover"
+                />
 
-              <ImageField
-                title="Favicon"
-                helpText="O ícone que aparece na aba do navegador. Prefira uma imagem quadrada simples, sem muito detalhe."
-                currentUrl={tenant?.faviconUrl ?? null}
-                file={favicon}
-                previewUrl={faviconPreview}
-                onFileChange={setFavicon}
-                previewClassName="h-16 w-16 self-center rounded-lg object-cover"
-              />
-            </div>
+                <ImageField
+                  title="Favicon"
+                  helpText="O ícone que aparece na aba do navegador. Prefira uma imagem quadrada simples, sem muito detalhe."
+                  currentUrl={tenant?.faviconUrl ?? null}
+                  file={favicon}
+                  previewUrl={faviconPreview}
+                  onFileChange={setFavicon}
+                  previewClassName="h-16 w-16 self-center rounded-lg object-cover"
+                />
+              </div>
+            )}
 
             <Separator />
 

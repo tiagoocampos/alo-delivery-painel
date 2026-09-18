@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { Link, NavLink, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   ListOrdered,
@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/sheet"
 import { StoreSettingsSheet } from "@/components/StoreSettingsSheet"
 import { clearAuth, getStoredUser, isStoreOwner } from "@/lib/auth"
-import { getMyTenant } from "@/services/tenant"
-import { showApiError } from "@/lib/utils-api"
 import { cn } from "@/lib/utils"
+import { useTenant } from "@/contexts/TenantContext"
+import { getPlanLabel } from "@/lib/plan"
 import type { Tenant, User } from "@/types"
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
@@ -82,29 +82,35 @@ function RoleBadge({ user }: { user: User | null }) {
   )
 }
 
+function PlanBadge({ tenant }: { tenant: Tenant | null }) {
+  if (!tenant) return null
+  const label = getPlanLabel(tenant)
+
+  if (tenant.effectivePlan === "basico") {
+    return (
+      <Badge asChild className="w-fit cursor-pointer border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200">
+        <Link to="/personalizacao">{label}</Link>
+      </Badge>
+    )
+  }
+
+  return (
+    <Badge variant="secondary" className="w-fit">
+      {label}
+    </Badge>
+  )
+}
+
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const { tenant, setTenant } = useTenant()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     setUser(getStoredUser())
   }, [])
-
-  useEffect(() => {
-    if (!user) return
-    let active = true
-    getMyTenant()
-      .then((response) => {
-        if (active) setTenant(response.data)
-      })
-      .catch((error) => showApiError(error, "Erro ao carregar dados da loja"))
-    return () => {
-      active = false
-    }
-  }, [user])
 
   function handleLogout() {
     clearAuth()
@@ -116,17 +122,22 @@ export function AppLayout({ children }: { children: ReactNode }) {
   function StoreActions() {
     return (
       <div className="flex flex-col gap-2">
-        {tenant && isStoreOwner(user) && (
-          <div className="flex items-center justify-between gap-2 rounded-lg bg-muted p-3">
-            <p className="truncate text-sm font-medium text-foreground">{tenant.name}</p>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Editar nome da loja"
-            >
-              <Pencil className="size-3.5" />
-            </Button>
+        {tenant && (
+          <div className="flex flex-col gap-2 rounded-lg bg-muted p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-sm font-medium text-foreground">{tenant.name}</p>
+              {isStoreOwner(user) && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Editar nome da loja"
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              )}
+            </div>
+            <PlanBadge tenant={tenant} />
           </div>
         )}
         {storeUrl ? (

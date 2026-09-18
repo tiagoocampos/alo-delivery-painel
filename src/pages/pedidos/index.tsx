@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { api } from "@/services/api"
-import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice, getTodayDateOnly } from "@/lib/utils-api"
 import { isStoreOpenNow } from "@/lib/businessHours"
-import type { BusinessHourEntry, Order, OrdersSummary, OrderStatus, UpdateOrderStatusResult } from "@/types"
+import { useTenant } from "@/contexts/TenantContext"
+import type { Order, OrdersSummary, OrderStatus, UpdateOrderStatusResult } from "@/types"
 
 const POLL_INTERVAL_MS = 15_000
 const STORE_OPEN_CHECK_INTERVAL_MS = 60_000
@@ -35,6 +35,7 @@ const COLUMNS: { status: OrderStatus; title: string }[] = [
 ]
 
 export function PedidosPage() {
+  const { tenant } = useTenant()
   const [date, setDate] = useState(getTodayDateOnly())
   const [orders, setOrders] = useState<Order[]>([])
   const [summary, setSummary] = useState<OrdersSummary | null>(null)
@@ -44,7 +45,6 @@ export function PedidosPage() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode)
 
-  const [businessHours, setBusinessHours] = useState<BusinessHourEntry[] | null>(null)
   const [storeOpen, setStoreOpen] = useState(true)
 
   const detailOrder = orders.find((order) => order.id === detailOrderId) ?? null
@@ -80,22 +80,14 @@ export function PedidosPage() {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode)
   }, [viewMode])
 
-  // Busca o horário de funcionamento uma vez — usado só para decidir se o
-  // polling automático deve estar ligado ou desligado.
-  useEffect(() => {
-    getMyTenant()
-      .then((response) => setBusinessHours(response.data.businessHours))
-      .catch((error) => showApiError(error, "Erro ao carregar horário de funcionamento"))
-  }, [])
-
   // Vigia: reavalia a cada minuto se a loja está aberta agora, ligando/desligando
   // o polling sozinho nos horários de abertura/fechamento, sem precisar recarregar.
   useEffect(() => {
-    const check = () => setStoreOpen(isStoreOpenNow(businessHours))
+    const check = () => setStoreOpen(isStoreOpenNow(tenant?.businessHours ?? null))
     check()
     const watcher = setInterval(check, STORE_OPEN_CHECK_INTERVAL_MS)
     return () => clearInterval(watcher)
-  }, [businessHours])
+  }, [tenant])
 
   // Polling: só ativo enquanto a loja estiver marcada como aberta.
   useEffect(() => {
@@ -149,6 +141,13 @@ export function PedidosPage() {
             />
           </div>
         </div>
+
+        {tenant?.effectivePlan === "basico" && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            O acúmulo de novos pontos está pausado no plano básico. Os pontos que seus clientes já têm continuam
+            salvos e voltam a ser acumulados no plano completo.
+          </p>
+        )}
 
         {!storeOpen && (
           <p className="rounded-lg border border-dashed border-border bg-muted px-3 py-2 text-xs text-muted-foreground">

@@ -15,6 +15,13 @@ export interface BusinessHourEntry {
   closesAt: string | null // "HH:mm"
 }
 
+export type EffectivePlan = "completo" | "basico"
+
+export interface TenantSubscription {
+  status: string // ex: "trial", "active", ...
+  startedAt: string
+}
+
 export interface Tenant {
   id: string
   name: string
@@ -31,6 +38,8 @@ export interface Tenant {
   pixKey: string | null
   minimumOrderValue: number
   businessHours: BusinessHourEntry[] | null
+  effectivePlan: EffectivePlan
+  subscription?: TenantSubscription | null
 }
 
 export interface CategorySize {
