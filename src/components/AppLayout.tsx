@@ -20,6 +20,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { StoreSettingsSheet } from "@/components/StoreSettingsSheet"
+import { InstallAppButton } from "@/components/InstallAppButton"
 import { clearAuth, getStoredUser, isStoreOwner } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import { useTenant } from "@/contexts/TenantContext"
@@ -153,6 +154,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             Ver minha loja
           </Button>
         )}
+        <InstallAppButton />
       </div>
     )
   }
