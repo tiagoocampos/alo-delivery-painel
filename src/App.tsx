@@ -8,6 +8,7 @@ import { DashboardPage } from "@/pages/dashboard"
 import { CardapioPage } from "@/pages/cardapio"
 import { PedidosPage } from "@/pages/pedidos"
 import { PersonalizacaoPage } from "@/pages/personalizacao"
+import { PdvPage } from "@/pages/pdv"
 
 function App() {
   return (
@@ -37,6 +38,14 @@ function App() {
         element={
           <ProtectedRoute>
             <PedidosPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pdv"
+        element={
+          <ProtectedRoute>
+            <PdvPage />
           </ProtectedRoute>
         }
       />

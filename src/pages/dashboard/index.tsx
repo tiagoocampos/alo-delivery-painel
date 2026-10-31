@@ -8,7 +8,8 @@ import { RevenueChart } from "@/components/RevenueChart"
 import { api } from "@/services/api"
 import { showApiError, formatPrice } from "@/lib/utils-api"
 import { getStoredUser, isStoreOwner } from "@/lib/auth"
-import type { DashboardRevenuePoint, DashboardSummary, DashboardTopProduct, Order } from "@/types"
+import { getTodayDateOnly } from "@/lib/utils-api"
+import type { DashboardRevenuePoint, DashboardSummary, DashboardTopProduct, Order, OrdersSummary } from "@/types"
 
 function isToday(dateString: string) {
   const date = new Date(dateString)
@@ -41,6 +42,7 @@ const VARIANCE_CLASSES: Record<"positive" | "negative" | "neutral", string> = {
 export function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [todaySplit, setTodaySplit] = useState<OrdersSummary | null>(null)
   const user = getStoredUser()
   const owner = isStoreOwner(user)
 
@@ -56,6 +58,15 @@ export function DashboardPage() {
         setLoading(true)
         const response = await api.get<Order[]>("/orders")
         if (active) setOrders(response.data)
+        // Divisão delivery x balcão é complementar: se falhar, só some a linha.
+        try {
+          const summaryRes = await api.get<OrdersSummary>("/orders/summary", {
+            params: { date: getTodayDateOnly() },
+          })
+          if (active) setTodaySplit(summaryRes.data)
+        } catch {
+          // ignora
+        }
       } catch (error) {
         showApiError(error, "Erro ao carregar pedidos")
       } finally {
@@ -158,7 +169,15 @@ export function DashboardPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento hoje</CardTitle>
                 <Tags className="size-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">{formatPrice(revenueToday)}</CardContent>
+              <CardContent className="flex flex-col gap-1">
+                <span className="text-2xl font-semibold">{formatPrice(revenueToday)}</span>
+                {todaySplit?.balcaoRevenue !== undefined && (
+                  <span className="text-xs text-muted-foreground">
+                    Delivery: {formatPrice(todaySplit.onlineRevenue ?? 0)} · Balcão:{" "}
+                    {formatPrice(todaySplit.balcaoRevenue)}
+                  </span>
+                )}
+              </CardContent>
             </Card>
           </div>
         )}

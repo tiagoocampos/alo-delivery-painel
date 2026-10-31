@@ -272,6 +272,8 @@ export function CardapioPage() {
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <p className="truncate text-sm font-medium text-foreground">{product.name}</p>
                                 {product.badge && <Badge>{PRODUCT_BADGE_LABELS[product.badge]}</Badge>}
+                                {product.availability === "balcao" && <Badge variant="outline">Só balcão</Badge>}
+                                {product.availability === "delivery" && <Badge variant="outline">Só delivery</Badge>}
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 {product.basePrice !== null ? formatPrice(product.basePrice) : "Preço por tamanho"}

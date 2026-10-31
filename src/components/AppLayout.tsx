@@ -8,6 +8,7 @@ import {
   UtensilsCrossed,
   LogOut,
   Pencil,
+  ShoppingCart,
   Store,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,7 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
 const NAV_ITEMS = [
   { to: "/", label: "Painel", icon: LayoutDashboard, end: true, ownerOnly: false },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered, end: false, ownerOnly: false },
+  { to: "/pdv", label: "PDV", icon: ShoppingCart, end: false, ownerOnly: false },
   { to: "/cardapio", label: "Cardápio", icon: UtensilsCrossed, end: false, ownerOnly: false },
   { to: "/personalizacao", label: "Personalização", icon: Palette, end: false, ownerOnly: true },
 ]

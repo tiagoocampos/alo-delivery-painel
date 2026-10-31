@@ -20,7 +20,7 @@ import { ProductVariants } from "@/components/ProductVariants"
 import { ProductExtras } from "@/components/ProductExtras"
 import { api } from "@/services/api"
 import { showApiError, centsToReais, reaisToCents } from "@/lib/utils-api"
-import type { Category, Product, ProductBadge } from "@/types"
+import type { Category, Product, ProductAvailability, ProductBadge } from "@/types"
 
 const NO_BADGE = "none"
 
@@ -29,6 +29,12 @@ const BADGE_OPTIONS: { value: ProductBadge | typeof NO_BADGE; label: string }[] 
   { value: "mais_pedido", label: "Mais pedido" },
   { value: "promocao", label: "Promoção" },
   { value: "novo", label: "Novo" },
+]
+
+const AVAILABILITY_OPTIONS: { value: ProductAvailability; label: string }[] = [
+  { value: "ambos", label: "Delivery e balcão" },
+  { value: "delivery", label: "Só delivery" },
+  { value: "balcao", label: "Só balcão" },
 ]
 
 const productSchema = z.object({
@@ -41,6 +47,7 @@ const productSchema = z.object({
     .or(z.literal("")),
   categoryId: z.string().min(1, "Selecione uma categoria"),
   badge: z.string(),
+  availability: z.enum(["ambos", "delivery", "balcao"]),
 })
 
 type ProductValues = z.infer<typeof productSchema>
@@ -90,9 +97,10 @@ export function ProductFormSheet({
         basePrice: product.basePrice === null ? "" : centsToReais(product.basePrice),
         categoryId: product.categoryId,
         badge: product.badge ?? NO_BADGE,
+        availability: product.availability ?? "ambos",
       })
     } else {
-      reset({ name: "", description: "", basePrice: "", categoryId: defaultCategoryId ?? "", badge: NO_BADGE })
+      reset({ name: "", description: "", basePrice: "", categoryId: defaultCategoryId ?? "", badge: NO_BADGE, availability: "ambos" })
     }
   }, [open, product, defaultCategoryId, reset])
 
@@ -101,8 +109,10 @@ export function ProductFormSheet({
   const selectedCategory = categories.find((category) => category.id === watch("categoryId"))
   const categoryHasSizes = Boolean(selectedCategory?.sizes?.length)
 
+  const imageRequired = watch("availability") !== "balcao"
+
   async function onSubmit(values: ProductValues) {
-    if (!isEdit && !file) {
+    if (!isEdit && !file && imageRequired) {
       setFileError("A imagem do produto é obrigatória")
       return
     }
@@ -119,6 +129,7 @@ export function ProductFormSheet({
       formData.append("basePrice", String(reaisToCents(values.basePrice)))
     }
     formData.append("categoryId", values.categoryId)
+    formData.append("availability", values.availability)
     // O backend valida "badge" como um dos 3 valores, null (de verdade) ou
     // ausente — nunca string vazia. Como multipart/form-data só transmite
     // strings, não dá pra representar "null" nesse formato; por isso, quando
@@ -206,6 +217,28 @@ export function ProductFormSheet({
           )}
 
           <div className="flex flex-col gap-1.5">
+            <Label>Onde vender</Label>
+            <Select
+              value={watch("availability")}
+              onValueChange={(value) => {
+                setValue("availability", value as ProductAvailability, { shouldValidate: true })
+                setFileError("")
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Onde vender" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABILITY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <Label>Selo</Label>
             <Select value={watch("badge") || undefined} onValueChange={(value) => setValue("badge", value, { shouldValidate: true })}>
               <SelectTrigger className="w-full">
@@ -222,7 +255,7 @@ export function ProductFormSheet({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="file">Imagem {isEdit ? "(opcional)" : ""}</Label>
+            <Label htmlFor="file">Imagem {isEdit || !imageRequired ? "(opcional)" : ""}</Label>
             <Input
               id="file"
               type="file"

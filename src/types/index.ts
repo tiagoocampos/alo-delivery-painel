@@ -85,6 +85,8 @@ export interface ProductCategorySummary {
 
 export type ProductBadge = "mais_pedido" | "promocao" | "novo"
 
+export type ProductAvailability = "ambos" | "delivery" | "balcao"
+
 export interface Product {
   id: string
   tenantId: string
@@ -95,6 +97,7 @@ export interface Product {
   basePrice: number | null
   isActive: boolean
   badge: ProductBadge | null
+  availability: ProductAvailability
   createdAt: string
   updatedAt: string
   category: ProductCategorySummary
@@ -169,6 +172,8 @@ export interface OrdersSummary {
   totalRevenue: number
   averageTicket: number
   totalOrdersIncludingCancelled: number
+  onlineRevenue?: number
+  balcaoRevenue?: number
 }
 
 export interface DashboardMonthSummary {
@@ -191,4 +196,38 @@ export interface DashboardTopProduct {
   productId: string
   productName: string
   totalQuantity: number
+}
+
+export type PosPaymentMethod = "dinheiro" | "pix" | "cartao_debito" | "cartao_credito"
+
+export type PosSaleItemInput =
+  | { type: "product"; productId: string; variantId?: string; extraIds?: string[]; quantity: number }
+  | { type: "custom"; name: string; unitPrice: number; quantity: number }
+
+export interface PosSaleInput {
+  clientId: string
+  paymentMethod: PosPaymentMethod
+  items: PosSaleItemInput[]
+}
+
+export interface PosSale {
+  id: string
+  createdAt: string
+  status: string // "concluida" | "cancelada" (o backend marca cancelada via status ou cancelReason)
+  paymentMethod: PosPaymentMethod
+  total: number
+  cancelReason: string | null
+  items: { name: string; quantity: number; unitPrice: number }[]
+}
+
+export interface PosSalesSummary {
+  totalSales: number
+  totalRevenue: number
+  byPaymentMethod: { paymentMethod: PosPaymentMethod; count: number; total: number }[]
+}
+
+export interface PosSalesResponse {
+  date: string
+  sales: PosSale[]
+  summary: PosSalesSummary
 }
