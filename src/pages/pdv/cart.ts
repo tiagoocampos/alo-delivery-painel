@@ -1,4 +1,4 @@
-import type { Product, ProductExtra, ProductVariant } from "@/types"
+import type { PosSaleItemInput, Product, ProductExtra, ProductVariant } from "@/types"
 
 export interface CartLine {
   key: string
@@ -45,11 +45,16 @@ export function buildCustomLine(name: string, unitPrice: number, quantity: numbe
   return { key: `c:${crypto.randomUUID()}`, kind: "custom", name, unitPrice, quantity }
 }
 
+// O backend aceita de 1 a 99 por linha.
+export const MAX_LINE_QUANTITY = 99
+
 export function addLine(lines: CartLine[], line: CartLine): CartLine[] {
   const existing = lines.find((item) => item.key === line.key)
   if (!existing) return [...lines, line]
   return lines.map((item) =>
-    item.key === line.key ? { ...item, quantity: item.quantity + line.quantity } : item
+    item.key === line.key
+      ? { ...item, quantity: Math.min(item.quantity + line.quantity, MAX_LINE_QUANTITY) }
+      : item
   )
 }
 
@@ -59,4 +64,21 @@ export function cartTotal(lines: CartLine[]): number {
 
 export function cartCount(lines: CartLine[]): number {
   return lines.reduce((sum, line) => sum + line.quantity, 0)
+}
+
+export function lineToApiItem(line: CartLine): PosSaleItemInput {
+  if (line.kind === "custom") {
+    return { type: "custom", name: line.name, unitPrice: line.unitPrice, quantity: line.quantity }
+  }
+  return {
+    type: "product",
+    productId: line.productId!,
+    ...(line.variantId ? { variantId: line.variantId } : {}),
+    ...(line.extraIds && line.extraIds.length > 0 ? { extraIds: line.extraIds } : {}),
+    quantity: line.quantity,
+  }
+}
+
+export function simpleProductLine(product: Product): CartLine {
+  return buildProductLine(product, null, [])
 }

@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { cancelPosSale, listPosSales } from "@/services/pos"
+import { cancelPosSale, listPosSales, listPosTables } from "@/services/pos"
 import { getStoredUser, isStoreOwner } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import { formatPrice, getApiErrorMessage, getTodayDateOnly } from "@/lib/utils-api"
 import type { PosPaymentMethod, PosSale, PosSalesResponse } from "@/types"
 import { PAYMENT_LABELS } from "./PaymentDialog"
+import { ReasonDialog } from "./ReasonDialog"
 
 const SHORT_PAYMENT_LABELS: Record<PosPaymentMethod, string> = {
   dinheiro: "Dinheiro",
@@ -23,7 +22,7 @@ const SHORT_PAYMENT_LABELS: Record<PosPaymentMethod, string> = {
 }
 
 function isCanceled(sale: PosSale) {
-  return sale.status.toLowerCase().startsWith("cancel") || Boolean(sale.cancelReason)
+  return sale.status === "cancelado"
 }
 
 function formatTime(iso: string) {
@@ -34,16 +33,15 @@ function summarizeItems(sale: PosSale) {
   return sale.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")
 }
 
-export function VendasDoDia() {
+export function VendasDoDia({ onGoToMesas }: { onGoToMesas: () => void }) {
   const owner = isStoreOwner(getStoredUser())
   const [date, setDate] = useState(getTodayDateOnly())
   const [data, setData] = useState<PosSalesResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
+  const [openTables, setOpenTables] = useState(0)
   const [saleToCancel, setSaleToCancel] = useState<PosSale | null>(null)
-  const [reason, setReason] = useState("")
-  const [reasonError, setReasonError] = useState("")
   const [canceling, setCanceling] = useState(false)
 
   const load = useCallback(async () => {
@@ -52,6 +50,10 @@ export function VendasDoDia() {
       setLoadError(false)
       const response = await listPosSales(date)
       setData(response.data)
+      // Aviso de mesas abertas é complementar: se falhar, só some.
+      listPosTables()
+        .then((res) => setOpenTables(res.data.length))
+        .catch(() => {})
     } catch {
       setLoadError(true)
     } finally {
@@ -64,19 +66,7 @@ export function VendasDoDia() {
   }, [load])
 
   function askCancel(sale: PosSale) {
-    setReason("")
-    setReasonError("")
     setSaleToCancel(sale)
-  }
-
-  function handleConfirmCancel() {
-    if (!saleToCancel) return
-    const trimmed = reason.trim()
-    if (!trimmed) {
-      setReasonError("Informe o motivo do cancelamento")
-      return
-    }
-    void doCancel(saleToCancel, trimmed)
   }
 
   async function doCancel(sale: PosSale, trimmedReason: string) {
@@ -127,6 +117,14 @@ export function VendasDoDia() {
       ) : (
         data && (
           <>
+            {openTables > 0 && (
+              <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {openTables} {openTables === 1 ? "mesa ainda aberta" : "mesas ainda abertas"} — não contam no total.{" "}
+                <button type="button" className="font-medium underline" onClick={onGoToMesas}>
+                  Ver mesas
+                </button>
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <Card>
                 <CardHeader>
@@ -171,9 +169,10 @@ export function VendasDoDia() {
                   return (
                     <li key={sale.id} className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
                       <span className="w-12 shrink-0 text-sm font-medium text-foreground">
-                        {formatTime(sale.createdAt)}
+                        {formatTime(sale.closedAt ?? sale.createdAt)}
                       </span>
                       <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">{sale.tableLabel ?? "Venda rápida"}</p>
                         <p className={cn("text-sm text-foreground", canceled && "line-through opacity-60")}>
                           {summarizeItems(sale)}
                         </p>
@@ -204,47 +203,19 @@ export function VendasDoDia() {
         )
       )}
 
-      <Dialog open={saleToCancel !== null} onOpenChange={(open) => !open && !canceling && setSaleToCancel(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancelar venda?</DialogTitle>
-            <DialogDescription>
-              {saleToCancel
-                ? `Venda de ${formatPrice(saleToCancel.total)} às ${formatTime(saleToCancel.createdAt)}. Ela sairá do resumo do dia.`
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              handleConfirmCancel()
-            }}
-            className="flex flex-col gap-3"
-          >
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="cancel-reason">Motivo (obrigatório)</Label>
-              <Textarea
-                id="cancel-reason"
-                value={reason}
-                onChange={(e) => {
-                  setReason(e.target.value)
-                  setReasonError("")
-                }}
-                maxLength={200}
-              />
-              {reasonError && <span className="text-xs text-destructive">{reasonError}</span>}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" disabled={canceling} onClick={() => setSaleToCancel(null)}>
-                Voltar
-              </Button>
-              <Button type="submit" variant="destructive" disabled={canceling}>
-                {canceling ? "Cancelando..." : "Cancelar venda"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ReasonDialog
+        open={saleToCancel !== null}
+        onOpenChange={(open) => !open && setSaleToCancel(null)}
+        title="Cancelar conta?"
+        description={
+          saleToCancel
+            ? `${saleToCancel.tableLabel ?? "Venda rápida"} — ${formatPrice(saleToCancel.total)}. Ela sairá do resumo do dia.`
+            : ""
+        }
+        confirmText="Cancelar conta"
+        submitting={canceling}
+        onSubmit={(reason) => saleToCancel && doCancel(saleToCancel, reason)}
+      />
     </div>
   )
 }

@@ -212,7 +212,9 @@ export interface PosSaleInput {
 
 export interface PosSale {
   id: string
+  tableLabel: string | null // null = venda rápida (sem mesa)
   createdAt: string
+  closedAt: string | null
   status: string // "concluida" | "cancelada" (o backend marca cancelada via status ou cancelReason)
   paymentMethod: PosPaymentMethod
   total: number
@@ -230,4 +232,32 @@ export interface PosSalesResponse {
   date: string
   sales: PosSale[]
   summary: PosSalesSummary
+}
+
+export interface PosTableSummary {
+  id: string
+  label: string
+  openedAt: string
+  itemsCount: number
+  total: number
+}
+
+export interface PosTableItem {
+  id: string
+  name: string
+  quantity: number
+  unitPrice: number
+  extras: { name: string; price: number }[]
+}
+
+export interface PosTableDetail {
+  id: string
+  label: string
+  status: string
+  openedAt: string
+  closedAt: string | null
+  paymentMethod: PosPaymentMethod | null
+  subtotal: number
+  total: number
+  items: PosTableItem[]
 }

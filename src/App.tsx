@@ -9,6 +9,7 @@ import { CardapioPage } from "@/pages/cardapio"
 import { PedidosPage } from "@/pages/pedidos"
 import { PersonalizacaoPage } from "@/pages/personalizacao"
 import { PdvPage } from "@/pages/pdv"
+import { MesaPage } from "@/pages/pdv/MesaPage"
 
 function App() {
   return (
@@ -46,6 +47,14 @@ function App() {
         element={
           <ProtectedRoute>
             <PdvPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pdv/mesa/:id"
+        element={
+          <ProtectedRoute>
+            <MesaPage />
           </ProtectedRoute>
         }
       />

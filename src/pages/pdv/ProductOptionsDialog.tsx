@@ -10,9 +10,10 @@ interface ProductOptionsDialogProps {
   product: Product | null
   onClose: () => void
   onAdd: (line: CartLine) => void
+  actionLabel?: string
 }
 
-export function ProductOptionsDialog({ product, onClose, onAdd }: ProductOptionsDialogProps) {
+export function ProductOptionsDialog({ product, onClose, onAdd, actionLabel = "Adicionar" }: ProductOptionsDialogProps) {
   const [variantId, setVariantId] = useState("")
   const [extraIds, setExtraIds] = useState<string[]>([])
 
@@ -97,7 +98,7 @@ export function ProductOptionsDialog({ product, onClose, onAdd }: ProductOptions
         <DialogFooter className="items-center sm:justify-between">
           <span className="text-lg font-semibold text-foreground">{formatPrice(price)}</span>
           <Button disabled={needsVariant} onClick={handleAdd}>
-            Adicionar
+            {actionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

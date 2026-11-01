@@ -64,6 +64,7 @@ export function CartPanel({ lines, onChangeQuantity, onRemove, onClear, onChecko
                   variant="outline"
                   size="icon-sm"
                   aria-label="Aumentar quantidade"
+                  disabled={line.quantity >= 99}
                   onClick={() => onChangeQuantity(line.key, 1)}
                 >
                   <Plus className="size-3.5" />

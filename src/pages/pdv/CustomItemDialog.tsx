@@ -10,11 +10,12 @@ interface CustomItemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAdd: (line: CartLine) => void
+  actionLabel?: string
 }
 
 const MONEY_REGEX = /^\d+([.,]\d{1,2})?$/
 
-export function CustomItemDialog({ open, onOpenChange, onAdd }: CustomItemDialogProps) {
+export function CustomItemDialog({ open, onOpenChange, onAdd, actionLabel = "Adicionar" }: CustomItemDialogProps) {
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
   const [quantity, setQuantity] = useState("1")
@@ -42,8 +43,8 @@ export function CustomItemDialog({ open, onOpenChange, onAdd }: CustomItemDialog
       return
     }
     const qty = Number(quantity)
-    if (!Number.isInteger(qty) || qty < 1) {
-      setError("A quantidade deve ser um número inteiro maior que zero")
+    if (!Number.isInteger(qty) || qty < 1 || qty > 99) {
+      setError("A quantidade deve ser um número inteiro de 1 a 99")
       return
     }
     onAdd(buildCustomLine(trimmed, cents, qty))
@@ -79,6 +80,7 @@ export function CustomItemDialog({ open, onOpenChange, onAdd }: CustomItemDialog
                 id="custom-qty"
                 type="number"
                 min={1}
+                max={99}
                 step={1}
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
@@ -87,7 +89,7 @@ export function CustomItemDialog({ open, onOpenChange, onAdd }: CustomItemDialog
           </div>
           {error && <span className="text-xs text-destructive">{error}</span>}
           <DialogFooter>
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit">{actionLabel}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

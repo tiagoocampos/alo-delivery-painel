@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Banknote, CreditCard, QrCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,11 +28,12 @@ interface PaymentDialogProps {
   total: number
   submitting: boolean
   onConfirm: (method: PosPaymentMethod) => void
+  summary?: ReactNode
 }
 
 const MONEY_REGEX = /^\d+([.,]\d{1,2})?$/
 
-export function PaymentDialog({ open, onOpenChange, total, submitting, onConfirm }: PaymentDialogProps) {
+export function PaymentDialog({ open, onOpenChange, total, submitting, onConfirm, summary }: PaymentDialogProps) {
   const [method, setMethod] = useState<PosPaymentMethod | null>(null)
   const [received, setReceived] = useState("")
 
@@ -61,6 +62,7 @@ export function PaymentDialog({ open, onOpenChange, total, submitting, onConfirm
           <DialogDescription>Escolha a forma de pagamento.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {summary}
           <div className="flex items-end justify-between rounded-lg bg-muted px-3 py-2">
             <span className="text-sm text-muted-foreground">Total</span>
             <span className="text-2xl font-semibold text-foreground">{formatPrice(total)}</span>

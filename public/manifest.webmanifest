@@ -13,6 +13,6 @@
     { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Nova venda (PDV)", "short_name": "PDV", "url": "/pdv" }
+    { "name": "PDV (mesas)", "short_name": "PDV", "url": "/pdv" }
   ]
 }
