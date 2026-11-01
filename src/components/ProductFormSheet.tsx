@@ -75,6 +75,7 @@ export function ProductFormSheet({
   const [submitting, setSubmitting] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
 
   const {
     register,
@@ -89,6 +90,7 @@ export function ProductFormSheet({
   useEffect(() => {
     if (!open) return
     setFile(null)
+    setImageUrl("")
     setFileError("")
     if (product) {
       reset({
@@ -111,10 +113,36 @@ export function ProductFormSheet({
 
   const imageRequired = watch("availability") !== "balcao"
 
+  async function imageFromUrl(url: string): Promise<File | null> {
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error("bad status")
+      const blob = await response.blob()
+      if (!["image/jpeg", "image/jpg", "image/png"].includes(blob.type)) {
+        setFileError("O link precisa ser de uma imagem JPG ou PNG")
+        return null
+      }
+      const extension = blob.type === "image/png" ? "png" : "jpg"
+      return new File([blob], `imagem.${extension}`, { type: blob.type })
+    } catch {
+      setFileError("Não foi possível baixar a imagem desse link. Baixe-a e envie como arquivo.")
+      return null
+    }
+  }
+
   async function onSubmit(values: ProductValues) {
-    if (!isEdit && !file && imageRequired) {
+    const trimmedUrl = imageUrl.trim()
+    if (!isEdit && !file && !trimmedUrl && imageRequired) {
       setFileError("A imagem do produto é obrigatória")
       return
+    }
+
+    let imageFile = file
+    if (!imageFile && trimmedUrl) {
+      setSubmitting(true)
+      imageFile = await imageFromUrl(trimmedUrl)
+      setSubmitting(false)
+      if (!imageFile) return
     }
 
     if (!categoryHasSizes && !values.basePrice) {
@@ -138,7 +166,7 @@ export function ProductFormSheet({
     if (values.badge !== NO_BADGE) {
       formData.append("badge", values.badge)
     }
-    if (file) formData.append("file", file)
+    if (imageFile) formData.append("file", imageFile)
 
     try {
       setSubmitting(true)
@@ -262,10 +290,21 @@ export function ProductFormSheet({
               accept="image/jpeg,image/jpg,image/png"
               onChange={(e) => {
                 setFile(e.target.files?.[0] ?? null)
+                setImageUrl("")
                 setFileError("")
               }}
             />
-            {isEdit && product?.imageUrl && !file && (
+            <Input
+              type="url"
+              value={imageUrl}
+              disabled={Boolean(file)}
+              placeholder="Ou cole o link de uma imagem (https://...)"
+              onChange={(e) => {
+                setImageUrl(e.target.value)
+                setFileError("")
+              }}
+            />
+            {isEdit && product?.imageUrl && !file && !imageUrl.trim() && (
               <img src={product.imageUrl} alt={product.name} className="mt-1 h-24 w-24 rounded-lg object-cover" />
             )}
             {fileError && <span className="text-xs text-destructive">{fileError}</span>}
