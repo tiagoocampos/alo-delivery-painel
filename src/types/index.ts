@@ -98,6 +98,8 @@ export interface Product {
   isActive: boolean
   badge: ProductBadge | null
   availability: ProductAvailability
+  // Ingredientes padrão (o cliente pode tirar). Respostas antigas podem não trazer: tratar como [].
+  ingredients?: string[]
   createdAt: string
   updatedAt: string
   category: ProductCategorySummary

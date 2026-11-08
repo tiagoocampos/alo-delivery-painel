@@ -22,6 +22,7 @@ import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice } from "@/lib/utils-api"
 import { getStoredUser, isStoreOwner } from "@/lib/auth"
 import { isPizzaCategoryName } from "@/lib/pizzaCategory"
+import { countLabel } from "@/lib/ingredients"
 import type { Category, CategoryCrust, CategorySize, Product, ProductBadge } from "@/types"
 
 const PRODUCT_BADGE_LABELS: Record<ProductBadge, string> = {
@@ -277,6 +278,7 @@ export function CardapioPage() {
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 {product.basePrice !== null ? formatPrice(product.basePrice) : "Preço por tamanho"}
+                                {(product.ingredients?.length ?? 0) > 0 && ` · ${countLabel(product.ingredients!.length)}`}
                               </p>
                             </div>
                             {owner && (

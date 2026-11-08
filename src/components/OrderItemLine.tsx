@@ -1,3 +1,4 @@
+import { OrderItemNote } from "@/components/OrderItemNote"
 import type { OrderItem } from "@/types"
 
 interface OrderItemLineProps {
@@ -20,7 +21,7 @@ export function OrderItemLine({ item }: OrderItemLineProps) {
         </p>
       )}
       {item.categoryCrust && <p className="text-xs text-muted-foreground/80">Borda: {item.categoryCrust.name}</p>}
-      {item.note && <p className="text-xs text-muted-foreground/80">Obs: {item.note}</p>}
+      {item.note && <OrderItemNote note={item.note} />}
     </div>
   )
 }

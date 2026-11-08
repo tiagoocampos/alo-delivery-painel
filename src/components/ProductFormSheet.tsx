@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ProductVariants } from "@/components/ProductVariants"
 import { ProductExtras } from "@/components/ProductExtras"
+import { IngredientsField } from "@/components/IngredientsField"
 import { api } from "@/services/api"
 import { showApiError, centsToReais, reaisToCents } from "@/lib/utils-api"
 import type { Category, Product, ProductAvailability, ProductBadge } from "@/types"
@@ -76,6 +77,7 @@ export function ProductFormSheet({
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState("")
   const [imageUrl, setImageUrl] = useState("")
+  const [ingredients, setIngredients] = useState<string[]>([])
 
   const {
     register,
@@ -92,6 +94,7 @@ export function ProductFormSheet({
     setFile(null)
     setImageUrl("")
     setFileError("")
+    setIngredients(product?.ingredients ?? [])
     if (product) {
       reset({
         name: product.name,
@@ -158,6 +161,12 @@ export function ProductFormSheet({
     }
     formData.append("categoryId", values.categoryId)
     formData.append("availability", values.availability)
+    // Ingredientes vão como texto JSON. Na criação sempre; na edição só se a
+    // lista mudou (enviar "[]" limpa no backend, então não mandamos à toa).
+    const ingredientsChanged = JSON.stringify(ingredients) !== JSON.stringify(product?.ingredients ?? [])
+    if (!isEdit || ingredientsChanged) {
+      formData.append("ingredients", JSON.stringify(ingredients))
+    }
     // O backend valida "badge" como um dos 3 valores, null (de verdade) ou
     // ausente — nunca string vazia. Como multipart/form-data só transmite
     // strings, não dá pra representar "null" nesse formato; por isso, quando
@@ -182,7 +191,14 @@ export function ProductFormSheet({
         })
         // Mantém o sheet aberto e muda para modo edição: variações só podem
         // ser criadas depois que o produto existe (precisam do id).
-        onCreated(response.data)
+        // A resposta do POST não traz variações/adicionais (o produto acabou de
+        // nascer); sem esses vazios o formulário em modo edição quebraria.
+        onCreated({
+          ...response.data,
+          variants: response.data.variants ?? [],
+          extras: response.data.extras ?? [],
+          ingredients: response.data.ingredients ?? [],
+        })
         onSaved()
       }
     } catch (error) {
@@ -213,6 +229,12 @@ export function ProductFormSheet({
             <Label htmlFor="description">Descrição</Label>
             <Textarea id="description" placeholder="Ingredientes, tamanho..." {...register("description")} />
           </div>
+
+          <IngredientsField
+            value={ingredients}
+            onChange={setIngredients}
+            description={watch("description") ?? ""}
+          />
 
           <div className="flex flex-col gap-1.5">
             <Label>Categoria</Label>
