@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   Sheet,
@@ -77,6 +78,7 @@ export function ProductFormSheet({
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState("")
   const [imageUrl, setImageUrl] = useState("")
+  const [removeImage, setRemoveImage] = useState(false)
   const [ingredients, setIngredients] = useState<string[]>([])
 
   const {
@@ -93,6 +95,7 @@ export function ProductFormSheet({
     if (!open) return
     setFile(null)
     setImageUrl("")
+    setRemoveImage(false)
     setFileError("")
     setIngredients(product?.ingredients ?? [])
     if (product) {
@@ -114,8 +117,6 @@ export function ProductFormSheet({
   const selectedCategory = categories.find((category) => category.id === watch("categoryId"))
   const categoryHasSizes = Boolean(selectedCategory?.sizes?.length)
 
-  const imageRequired = watch("availability") !== "balcao"
-
   async function imageFromUrl(url: string): Promise<File | null> {
     try {
       const response = await fetch(url)
@@ -135,11 +136,6 @@ export function ProductFormSheet({
 
   async function onSubmit(values: ProductValues) {
     const trimmedUrl = imageUrl.trim()
-    if (!isEdit && !file && !trimmedUrl && imageRequired) {
-      setFileError("A imagem do produto é obrigatória")
-      return
-    }
-
     let imageFile = file
     if (!imageFile && trimmedUrl) {
       setSubmitting(true)
@@ -175,7 +171,12 @@ export function ProductFormSheet({
     if (values.badge !== NO_BADGE) {
       formData.append("badge", values.badge)
     }
-    if (imageFile) formData.append("file", imageFile)
+    if (imageFile) {
+      formData.append("file", imageFile)
+    } else if (isEdit && removeImage) {
+      // Sem imagem nova, "Remover imagem" apaga a que já estava salva.
+      formData.append("removeImage", "true")
+    }
 
     try {
       setSubmitting(true)
@@ -305,7 +306,7 @@ export function ProductFormSheet({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="file">Imagem {isEdit || !imageRequired ? "(opcional)" : ""}</Label>
+            <Label htmlFor="file">Imagem (opcional)</Label>
             <Input
               id="file"
               type="file"
@@ -313,6 +314,7 @@ export function ProductFormSheet({
               onChange={(e) => {
                 setFile(e.target.files?.[0] ?? null)
                 setImageUrl("")
+                setRemoveImage(false)
                 setFileError("")
               }}
             />
@@ -323,11 +325,33 @@ export function ProductFormSheet({
               placeholder="Ou cole o link de uma imagem (https://...)"
               onChange={(e) => {
                 setImageUrl(e.target.value)
+                setRemoveImage(false)
                 setFileError("")
               }}
             />
             {isEdit && product?.imageUrl && !file && !imageUrl.trim() && (
-              <img src={product.imageUrl} alt={product.name} className="mt-1 h-24 w-24 rounded-lg object-cover" />
+              <div className="mt-1 flex items-center gap-3">
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className={`h-24 w-24 rounded-lg object-cover ${removeImage ? "opacity-30 grayscale" : ""}`}
+                />
+                <div className="flex flex-col items-start gap-1.5">
+                  {removeImage ? (
+                    <>
+                      <span className="text-xs text-muted-foreground">A imagem será removida ao salvar.</span>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setRemoveImage(false)}>
+                        Desfazer
+                      </Button>
+                    </>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" onClick={() => setRemoveImage(true)}>
+                      <Trash2 className="size-3.5" />
+                      Remover imagem
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
             {fileError && <span className="text-xs text-destructive">{fileError}</span>}
           </div>
