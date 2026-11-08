@@ -10,6 +10,7 @@ import {
   Pencil,
   Armchair,
   Store,
+  GraduationCap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,9 +27,9 @@ import { clearAuth, getStoredUser, isStoreOwner } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import { useTenant } from "@/contexts/TenantContext"
 import { getPlanLabel } from "@/lib/plan"
+import { getStoreUrl } from "@/lib/storeUrl"
+import { useTour } from "@/tour/useTour"
 import type { Tenant, User } from "@/types"
-
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL
 
 const NAV_ITEMS = [
   { to: "/", label: "Painel", icon: LayoutDashboard, end: true, ownerOnly: false },
@@ -109,6 +110,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { tenant, setTenant } = useTenant()
+  const { startTour } = useTour()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
@@ -120,7 +122,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
     navigate("/login", { replace: true })
   }
 
-  const storeUrl = tenant ? `${STOREFRONT_URL}/${tenant.slug}` : null
+  const storeUrl = getStoreUrl(tenant)
+
+  // No celular o menu é um Sheet: fecha antes de abrir o tour (o Sheet prende o foco).
+  function handleStartTutorial(fromSheet: boolean) {
+    if (!fromSheet) {
+      startTour()
+      return
+    }
+    setMobileOpen(false)
+    window.setTimeout(startTour, 350)
+  }
+
+  function TutorialButton({ fromSheet }: { fromSheet: boolean }) {
+    return (
+      <Button variant="ghost" onClick={() => handleStartTutorial(fromSheet)} data-tour="tutorial" className="justify-start gap-2">
+        <GraduationCap className="size-4" />
+        Tutorial
+      </Button>
+    )
+  }
 
   function StoreActions() {
     return (
@@ -134,6 +155,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setSettingsOpen(true)}
+                  data-tour="loja-editar"
                   aria-label="Editar nome da loja"
                 >
                   <Pencil className="size-3.5" />
@@ -144,7 +166,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
         {storeUrl ? (
-          <Button variant="outline" asChild className="justify-start gap-2">
+          <Button variant="outline" asChild data-tour="ver-loja" className="justify-start gap-2">
             <a href={storeUrl} target="_blank" rel="noreferrer">
               <Store className="size-4" />
               Ver minha loja
@@ -177,10 +199,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <RoleBadge user={user} />
               </div>
             )}
-            <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
-              <LogOut className="size-4" />
-              Sair
-            </Button>
+            <div className="flex flex-col gap-1">
+              <TutorialButton fromSheet={false} />
+              <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
+                <LogOut className="size-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         </aside>
 
@@ -189,7 +214,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <BrandMark className="h-6" />
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" data-tour="menu-button" aria-label="Abrir menu">
                   <Menu className="size-4" />
                 </Button>
               </SheetTrigger>
@@ -207,10 +232,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <RoleBadge user={user} />
                     </div>
                   )}
-                  <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
-                    <LogOut className="size-4" />
-                    Sair
-                  </Button>
+                  <div className="flex flex-col gap-1">
+                    <TutorialButton fromSheet />
+                    <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
+                      <LogOut className="size-4" />
+                      Sair
+                    </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

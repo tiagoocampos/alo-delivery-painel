@@ -125,7 +125,7 @@ export function PedidosPage() {
   return (
     <AppLayout>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div data-tour="pedidos-topo" className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="font-heading text-2xl font-semibold text-foreground">Pedidos</h1>
             <p className="text-sm text-muted-foreground">Acompanhe e atualize o status dos pedidos em tempo real.</p>

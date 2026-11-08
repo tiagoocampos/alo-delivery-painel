@@ -10,9 +10,15 @@ import { PedidosPage } from "@/pages/pedidos"
 import { PersonalizacaoPage } from "@/pages/personalizacao"
 import { PdvPage } from "@/pages/pdv"
 import { MesaPage } from "@/pages/pdv/MesaPage"
+import { TourProvider } from "@/tour/TourProvider"
+import { TourInvite } from "@/tour/TourInvite"
+import { TourOverlay } from "@/tour/TourOverlay"
 
 function App() {
   return (
+    // O tutorial vive acima das rotas: cada página monta o próprio AppLayout, que
+    // remonta a cada troca de rota e perderia o passo atual do tour.
+    <TourProvider>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -67,6 +73,9 @@ function App() {
         }
       />
     </Routes>
+    <TourInvite />
+    <TourOverlay />
+    </TourProvider>
   )
 }
 

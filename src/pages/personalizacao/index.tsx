@@ -266,7 +266,7 @@ export function PersonalizacaoPage() {
   return (
     <AppLayout>
       <div className="flex flex-col gap-6">
-        <div>
+        <div data-tour="personalizacao-topo">
           <h1 className="font-heading text-2xl font-semibold text-foreground">Personalização</h1>
           <p className="text-sm text-muted-foreground">
             Personalize a aparência e as informações do seu cardápio online.

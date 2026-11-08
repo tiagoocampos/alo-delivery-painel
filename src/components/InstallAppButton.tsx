@@ -9,7 +9,7 @@ export function InstallAppButton() {
 
   if (canInstall) {
     return (
-      <Button variant="outline" onClick={promptInstall} className="justify-start gap-2">
+      <Button variant="outline" onClick={promptInstall} data-tour="instalar-app" className="justify-start gap-2">
         <Download className="size-4" />
         Instalar app
       </Button>

@@ -15,7 +15,7 @@ export function PdvPage() {
   return (
     <AppLayout>
       <div className="flex flex-col gap-4 pb-20 lg:pb-0">
-        <div>
+        <div data-tour="pdv-topo">
           <h1 className="font-heading text-2xl font-semibold text-foreground">PDV</h1>
           <p className="text-sm text-muted-foreground">Controle as mesas e as vendas do balcão da sua loja.</p>
         </div>
