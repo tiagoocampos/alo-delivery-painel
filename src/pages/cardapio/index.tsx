@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { ImageOff, MoreVertical, Pencil, Plus, Power, Trash2 } from "lucide-react"
+import { ImageOff, Lock, MoreVertical, Pencil, Plus, Power, Sparkles, Trash2 } from "lucide-react"
 import { AppLayout } from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,8 @@ import { CategoryFormSheet } from "@/components/CategoryFormSheet"
 import { CategorySizes } from "@/components/CategorySizes"
 import { CategoryCrusts } from "@/components/CategoryCrusts"
 import { ProductFormSheet } from "@/components/ProductFormSheet"
+import { ImportMenuDialog } from "@/components/cardapio/ImportMenuDialog"
+import { useTenant } from "@/contexts/TenantContext"
 import { api } from "@/services/api"
 import { getMyTenant } from "@/services/tenant"
 import { showApiError, formatPrice } from "@/lib/utils-api"
@@ -33,6 +35,8 @@ const PRODUCT_BADGE_LABELS: Record<ProductBadge, string> = {
 
 export function CardapioPage() {
   const owner = isStoreOwner(getStoredUser())
+  const { tenant } = useTenant()
+  const importBlockedByPlan = tenant?.effectivePlan === "basico"
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,6 +48,8 @@ export function CardapioPage() {
   const [productSheetOpen, setProductSheetOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [productDefaultCategoryId, setProductDefaultCategoryId] = useState<string | undefined>(undefined)
+
+  const [importOpen, setImportOpen] = useState(false)
 
   async function loadAll() {
     try {
@@ -163,10 +169,24 @@ export function CardapioPage() {
             <p className="text-sm text-muted-foreground">Categorias, produtos, tamanhos e bordas da sua loja.</p>
           </div>
           {owner && (
-            <Button onClick={openCreateCategory} className="gap-1.5">
-              <Plus className="size-4" />
-              Nova categoria
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="outline"
+                  onClick={() => setImportOpen(true)}
+                  disabled={!tenant || importBlockedByPlan}
+                  className="gap-1.5"
+                >
+                  {importBlockedByPlan ? <Lock className="size-4" /> : <Sparkles className="size-4" />}
+                  Importar / atualizar cardápio com IA
+                </Button>
+                {importBlockedByPlan && <p className="text-xs text-muted-foreground">Disponível no plano completo</p>}
+              </div>
+              <Button onClick={openCreateCategory} className="gap-1.5">
+                <Plus className="size-4" />
+                Nova categoria
+              </Button>
+            </div>
           )}
         </div>
 
@@ -353,6 +373,8 @@ export function CardapioPage() {
         onSaved={loadAll}
         onCreated={setEditingProduct}
       />
+
+      {owner && <ImportMenuDialog open={importOpen} onOpenChange={setImportOpen} categories={categories} onApplied={loadAll} />}
 
       <ConfirmDialog
         open={Boolean(categoryToDelete)}

@@ -263,3 +263,74 @@ export interface PosTableDetail {
   total: number
   items: PosTableItem[]
 }
+
+export type MenuImportStatus = "new" | "unchanged" | "changed" | "similar"
+
+export type MenuImportWarning = "CATEGORY_HAS_SIZES" | "PRICE_UNREADABLE" | "PRODUCT_INACTIVE"
+
+export type MenuImportChangeField = "price" | "description" | "ingredients"
+
+export interface MenuImportProductRef {
+  productId: string
+  name: string
+  priceCents: number | null
+}
+
+export interface MenuImportChange {
+  field: MenuImportChangeField
+  from: number | string | string[] | null
+  to: number | string | string[] | null
+}
+
+export interface MenuImportItem {
+  tempId: string
+  status: MenuImportStatus
+  extracted: {
+    name: string
+    description: string | null
+    priceCents: number | null
+    categoryName: string
+    categoryId: string | null
+    ingredients: string[]
+    availability: ProductAvailability
+  }
+  match: MenuImportProductRef | null
+  changes: MenuImportChange[]
+  candidates: MenuImportProductRef[]
+  warnings: MenuImportWarning[]
+}
+
+export interface MenuImportPreview {
+  summary: { new: number; unchanged: number; changed: number; similar: number; total: number }
+  categories: { name: string; categoryId: string | null; isNew: boolean; hasSizes: boolean }[]
+  items: MenuImportItem[]
+}
+
+export type MenuImportConfirmItem =
+  | {
+      action: "create"
+      name: string
+      description?: string
+      priceCents: number
+      categoryId?: string
+      newCategoryName?: string
+      ingredients?: string[]
+      availability: ProductAvailability
+    }
+  | {
+      action: "update"
+      productId: string
+      fields: {
+        priceCents?: number
+        description?: string
+        ingredients?: string[]
+        availability?: ProductAvailability
+      }
+    }
+
+export interface MenuImportResult {
+  created: number
+  updated: number
+  skipped: number
+  categoriesCreated: number
+}
