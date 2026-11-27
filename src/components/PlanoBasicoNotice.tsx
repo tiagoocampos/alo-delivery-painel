@@ -12,7 +12,7 @@ interface PlanoBasicoNoticeProps {
 export function PlanoBasicoNotice({ description, reassurance }: PlanoBasicoNoticeProps) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+      <div className="flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
         <Sparkles className="size-6" />
       </div>
       <div className="flex flex-col gap-1.5">

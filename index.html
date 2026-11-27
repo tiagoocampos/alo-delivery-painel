@@ -11,6 +11,27 @@
     <meta name="apple-mobile-web-app-title" content="Alô Painel" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel do Lojista — Alô Delivery</title>
+    <script>
+      // Aplica o modo escuro antes do app carregar, para a tela não piscar branco.
+      // Mesma chave e mesmas cores do src/contexts/ThemeContext.tsx.
+      (function () {
+        var tema = "system"
+        try {
+          tema = localStorage.getItem("painel-tema") || "system"
+        } catch (e) {}
+        try {
+          var escuro = tema === "dark" || (tema === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+          if (escuro) {
+            document.documentElement.classList.add("dark")
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", "#0c1422")
+          }
+        } catch (e) {}
+      })()
+    </script>
+    <style>
+      /* Fundo escuro já no primeiro quadro, antes do CSS do app chegar. */
+      html.dark { background-color: #0c1422; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

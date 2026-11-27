@@ -52,10 +52,10 @@ export function SimilarSection({ items, categories, onDecide, onChangeCreate }: 
           const extractedPrice = item.item.extracted.priceCents
 
           return (
-            <li key={item.tempId} className={`flex flex-col gap-2 rounded-lg border p-3 ${pending ? "border-amber-400 bg-amber-50/50" : "border-border"}`}>
+            <li key={item.tempId} className={`flex flex-col gap-2 rounded-lg border p-3 ${pending ? "border-amber-400 bg-amber-50/50 dark:border-amber-500/50 dark:bg-amber-500/10" : "border-border"}`}>
               <fieldset className="flex flex-col gap-1">
                 <legend className="mb-1 flex items-start gap-1.5 text-sm font-medium text-foreground">
-                  <HelpCircle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                  <HelpCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span>
                     Lemos "{item.item.extracted.name}"
                     {extractedPrice !== null && ` (${formatPrice(extractedPrice)})`}. É qual produto?
@@ -76,7 +76,7 @@ export function SimilarSection({ items, categories, onDecide, onChangeCreate }: 
               </fieldset>
 
               {pending && (
-                <p role="alert" className="text-xs text-amber-700">
+                <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
                   Escolha uma opção para poder aplicar as mudanças.
                 </p>
               )}
@@ -93,7 +93,7 @@ export function SimilarSection({ items, categories, onDecide, onChangeCreate }: 
                 <div className="flex flex-col gap-2 border-t border-border pt-3">
                   <NewItemFields draft={item.create} categories={categories} onChange={(patch) => onChangeCreate(item.tempId, patch)} />
                   {newDraftIssues(item.create, categories).length > 0 && (
-                    <p role="alert" className="text-xs text-amber-700">
+                    <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
                       {newDraftIssues(item.create, categories).join(" ")}
                     </p>
                   )}

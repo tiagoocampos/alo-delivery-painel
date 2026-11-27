@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { TenantProvider } from "@/contexts/TenantContext"
 import { InstallPromptProvider } from "@/contexts/InstallPromptContext"
 import { PrinterProvider } from "@/contexts/PrinterContext"
+import { ThemeProvider } from "@/contexts/ThemeContext"
 import "./index.css"
 import App from "./App.tsx"
 
@@ -16,15 +17,17 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <InstallPromptProvider>
-        <TenantProvider>
-          <PrinterProvider>
-            <App />
-          </PrinterProvider>
-          <Toaster position="top-center" />
-        </TenantProvider>
-      </InstallPromptProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <InstallPromptProvider>
+          <TenantProvider>
+            <PrinterProvider>
+              <App />
+            </PrinterProvider>
+            <Toaster position="top-center" />
+          </TenantProvider>
+        </InstallPromptProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </StrictMode>
 )

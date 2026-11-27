@@ -118,7 +118,7 @@ export function VendasDoDia({ onGoToMesas }: { onGoToMesas: () => void }) {
         data && (
           <>
             {openTables > 0 && (
-              <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
                 {openTables} {openTables === 1 ? "mesa ainda aberta" : "mesas ainda abertas"} — não contam no total.{" "}
                 <button type="button" className="font-medium underline" onClick={onGoToMesas}>
                   Ver mesas

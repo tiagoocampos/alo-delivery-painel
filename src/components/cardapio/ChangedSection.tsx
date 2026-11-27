@@ -42,7 +42,7 @@ export function ChangedSection({ items, onChange, onRemove }: ChangedSectionProp
           const id = `import-${item.tempId}`
 
           return (
-            <li key={item.tempId} className={`flex flex-col gap-3 rounded-lg border p-3 ${issues.length ? "border-amber-400 bg-amber-50/50" : "border-border"}`}>
+            <li key={item.tempId} className={`flex flex-col gap-3 rounded-lg border p-3 ${issues.length ? "border-amber-400 bg-amber-50/50 dark:border-amber-500/50 dark:bg-amber-500/10" : "border-border"}`}>
               <div className="flex items-center gap-2">
                 <ImportCheckbox
                   id={`${id}-selected`}
@@ -113,7 +113,7 @@ export function ChangedSection({ items, onChange, onRemove }: ChangedSectionProp
               </div>
 
               {issues.length > 0 && (
-                <p role="alert" className="text-xs text-amber-700">
+                <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
                   {issues.join(" ")}
                 </p>
               )}

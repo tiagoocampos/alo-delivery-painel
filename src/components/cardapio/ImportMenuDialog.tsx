@@ -174,7 +174,7 @@ export function ImportMenuDialog({ open, onOpenChange, categories, onApplied }: 
 
           {step === "result" && result && (
             <div role="status" className="flex flex-col items-center gap-3 py-8 text-center">
-              <CheckCircle2 className="size-10 text-emerald-600" />
+              <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
               <p className="text-sm font-medium text-foreground">
                 {plural(result.created, "produto criado", "produtos criados")}, {result.updated} atualizado
                 {result.updated === 1 ? "" : "s"}, {result.skipped} pulado{result.skipped === 1 ? "" : "s"}.
@@ -202,7 +202,7 @@ export function ImportMenuDialog({ open, onOpenChange, categories, onApplied }: 
                 </p>
               )}
               {(plan.pendingDecisions > 0 || plan.blockers > 0) && (
-                <p className="text-xs text-amber-700">
+                <p className="text-xs text-amber-700 dark:text-amber-300">
                   {plan.pendingDecisions > 0 && `${plural(plan.pendingDecisions, "item parecido espera", "itens parecidos esperam")} decisão. `}
                   {plan.blockers > 0 && `${plural(plan.blockers, "item marcado precisa", "itens marcados precisam")} de correção ou deve ser desmarcado.`}
                 </p>

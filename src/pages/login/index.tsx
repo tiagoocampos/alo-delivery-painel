@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { BrandLogo } from "@/components/BrandLogo"
 import { Link, useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -57,11 +58,11 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-b from-white to-muted px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-b from-white to-muted dark:from-background px-4 py-10">
       <div className="pointer-events-none absolute -top-32 -right-40 size-105 rounded-full bg-accent/70 blur-3xl" />
-      <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-[0_20px_50px_-20px_rgba(23,105,224,0.25)] ring-1 ring-border sm:p-8">
+      <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-[0_20px_50px_-20px_rgba(23,105,224,0.25)] dark:shadow-none ring-1 ring-border sm:p-8">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <img src="/brand/logo-horizontal.png" alt="Alô Delivery" className="h-9 w-auto object-contain" />
+          <BrandLogo className="h-9" />
           <p className="text-sm text-muted-foreground">Entre para gerenciar sua loja</p>
         </div>
 

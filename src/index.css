@@ -128,6 +128,18 @@
     --sidebar-ring: #4f8cf0;
 }
 
+/* Controles nativos (data, rolagem) acompanham o modo escuro. */
+.dark {
+    color-scheme: dark;
+}
+
+/* Tooltip do gráfico do Painel: o Recharts põe fundo branco fixo. Só no escuro. */
+.dark .recharts-default-tooltip {
+    background-color: var(--popover) !important;
+    border-color: var(--border) !important;
+    color: var(--popover-foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

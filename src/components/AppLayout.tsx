@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/sheet"
 import { StoreSettingsSheet } from "@/components/StoreSettingsSheet"
 import { InstallAppButton } from "@/components/InstallAppButton"
+import { BrandLogo } from "@/components/BrandLogo"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { clearAuth, getStoredUser, isStoreOwner } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import { useTenant } from "@/contexts/TenantContext"
@@ -69,11 +71,7 @@ function NavLinks({ user, onNavigate }: { user: User | null; onNavigate?: () => 
 
 function BrandMark({ className }: { className?: string }) {
   return (
-    <img
-      src="/brand/logo-horizontal.png"
-      alt="Alô Delivery"
-      className={cn("h-7 w-auto object-contain", className)}
-    />
+    <BrandLogo className={cn("h-7", className)} />
   )
 }
 
@@ -92,7 +90,7 @@ function PlanBadge({ tenant }: { tenant: Tenant | null }) {
 
   if (tenant.effectivePlan === "basico") {
     return (
-      <Badge asChild className="w-fit cursor-pointer border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200">
+      <Badge asChild className="w-fit cursor-pointer border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300 dark:hover:bg-amber-500/25">
         <Link to="/personalizacao">{label}</Link>
       </Badge>
     )
@@ -200,6 +198,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </div>
             )}
             <div className="flex flex-col gap-1">
+              <ThemeToggle />
               <TutorialButton fromSheet={false} />
               <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
                 <LogOut className="size-4" />
@@ -233,6 +232,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     </div>
                   )}
                   <div className="flex flex-col gap-1">
+                    <ThemeToggle />
                     <TutorialButton fromSheet />
                     <Button variant="outline" onClick={handleLogout} className="justify-start gap-2">
                       <LogOut className="size-4" />

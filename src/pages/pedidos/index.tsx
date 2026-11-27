@@ -168,7 +168,7 @@ export function PedidosPage() {
         </div>
 
         {tenant?.effectivePlan === "basico" && (
-          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
             O acúmulo de novos pontos está pausado no plano básico. Os pontos que seus clientes já têm continuam
             salvos e voltam a ser acumulados no plano completo.
           </p>
