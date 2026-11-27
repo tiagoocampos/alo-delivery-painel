@@ -13,6 +13,9 @@ import { api } from "@/services/api"
 import { showApiError, formatPrice, getTodayDateOnly } from "@/lib/utils-api"
 import { isStoreOpenNow } from "@/lib/businessHours"
 import { useTenant } from "@/contexts/TenantContext"
+import { usePrinter } from "@/contexts/PrinterContext"
+import { PrinterStatusButton } from "@/components/printer/PrinterStatusButton"
+import { usePrintOrder } from "@/components/printer/usePrintOrder"
 import type { Order, OrdersSummary, OrderStatus, UpdateOrderStatusResult } from "@/types"
 
 const POLL_INTERVAL_MS = 15_000
@@ -36,6 +39,8 @@ const COLUMNS: { status: OrderStatus; title: string }[] = [
 
 export function PedidosPage() {
   const { tenant } = useTenant()
+  const printer = usePrinter()
+  const { printOrder } = usePrintOrder()
   const [date, setDate] = useState(getTodayDateOnly())
   const [orders, setOrders] = useState<Order[]>([])
   const [summary, setSummary] = useState<OrdersSummary | null>(null)
@@ -100,6 +105,21 @@ export function PedidosPage() {
     return () => clearInterval(poll)
   }, [storeOpen, date])
 
+  // Impressão automática da comanda. Só é chamada depois que o servidor
+  // confirmou "Iniciar preparo" por clique neste computador (nunca pelo polling).
+  // Se falhar, o pedido continua em preparo: só avisamos o lojista.
+  async function autoPrintOrder(order: Order) {
+    if (!printer.supported || !printer.settings.autoPrint) return
+    const failMessage =
+      "O pedido foi para o preparo, mas a comanda não foi impressa. Reconecte a impressora e use Imprimir comanda."
+    try {
+      const sent = await printOrder(order, false)
+      if (!sent) toast.warning(failMessage, { position: "top-center" })
+    } catch {
+      toast.warning(failMessage, { position: "top-center" })
+    }
+  }
+
   async function updateStatus(order: Order, status: OrderStatus) {
     try {
       setUpdatingId(order.id)
@@ -115,6 +135,8 @@ export function PedidosPage() {
       } else {
         toast.success("Status do pedido atualizado!", { position: "top-center" })
       }
+      // Sem await: a impressão não segura nem desfaz a mudança de status.
+      if (status === "preparo") void autoPrintOrder(order)
     } catch (error) {
       showApiError(error, "Erro ao atualizar pedido")
     } finally {
@@ -129,6 +151,9 @@ export function PedidosPage() {
           <div>
             <h1 className="font-heading text-2xl font-semibold text-foreground">Pedidos</h1>
             <p className="text-sm text-muted-foreground">Acompanhe e atualize o status dos pedidos em tempo real.</p>
+            <div className="mt-2">
+              <PrinterStatusButton />
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="orderDate">Data</Label>

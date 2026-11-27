@@ -130,6 +130,9 @@ export interface OrderItem {
   categorySize: { id: string; name: string; price?: number; category: { name: string } } | null
   categoryCrust: { id: string; name: string; priceDelta?: number } | null
   flavors: OrderItemFlavor[]
+  // O backend já devolve estes dois; usados na comanda impressa.
+  name?: string | null
+  extras?: { id: string; name: string; price: number }[]
 }
 
 export type CanceledBy = "customer" | "store"

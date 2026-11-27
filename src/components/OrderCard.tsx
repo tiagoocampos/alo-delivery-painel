@@ -3,6 +3,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { OrderItemLine } from "@/components/OrderItemLine"
+import { PrintOrderButton } from "@/components/printer/PrintOrderButton"
 import { formatDate, formatPrice } from "@/lib/utils-api"
 import { canCancelOrder, getNextOrderAction } from "@/lib/orderStatus"
 import type { Order, OrderStatus } from "@/types"
@@ -95,6 +96,8 @@ export function OrderCard({ order, onAdvance, onCancel, onOpenDetail, updating }
             )}
           </div>
         )}
+
+        <PrintOrderButton order={order} />
       </CardContent>
     </Card>
   )

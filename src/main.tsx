@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import { TenantProvider } from "@/contexts/TenantContext"
 import { InstallPromptProvider } from "@/contexts/InstallPromptContext"
+import { PrinterProvider } from "@/contexts/PrinterContext"
 import "./index.css"
 import App from "./App.tsx"
 
@@ -18,7 +19,9 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <InstallPromptProvider>
         <TenantProvider>
-          <App />
+          <PrinterProvider>
+            <App />
+          </PrinterProvider>
           <Toaster position="top-center" />
         </TenantProvider>
       </InstallPromptProvider>

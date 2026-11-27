@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { OrderItemLine } from "@/components/OrderItemLine"
+import { PrintOrderButton } from "@/components/printer/PrintOrderButton"
 import { OrderStatusBadge } from "@/components/OrderStatusBadge"
 import { formatDate, formatPrice } from "@/lib/utils-api"
 import { canCancelOrder, getNextOrderAction } from "@/lib/orderStatus"
@@ -105,6 +106,8 @@ export function OrderDetailSheet({ order, open, onOpenChange, onAdvance, onCance
                   <span className="text-foreground">{formatPrice(order.total)}</span>
                 </div>
               </div>
+
+              <PrintOrderButton order={order} size="default" className="w-full" />
             </div>
 
             {(nextAction || canCancel) && (
